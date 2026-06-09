@@ -400,3 +400,5 @@ python docs/generate_platform_summary.py
 O Gestok está estruturado como uma aplicação operacional funcional para ambiente
 de mercado. O foco atual é uso local ou em rede controlada. As recomendações da
 seção de produção devem ser aplicadas antes de exposição pública.
+#   G e s t o k  
+ 
