@@ -4,7 +4,6 @@ Sistema web de vendas, estoque e operação de caixa voltado para mercados e
 pequenos comércios. A plataforma reúne controle de produtos, PDV, histórico de
 vendas, movimentações de estoque, usuários, dashboard gerencial e relatórios em
 PDF.
-
 ## Principais recursos
 
 - Autenticação por matrícula e senha.
@@ -400,5 +399,6 @@ python docs/generate_platform_summary.py
 O Gestok está estruturado como uma aplicação operacional funcional para ambiente
 de mercado. O foco atual é uso local ou em rede controlada. As recomendações da
 seção de produção devem ser aplicadas antes de exposição pública.
-#   G e s t o k  
+#   G e s t o k 
+ 
  
