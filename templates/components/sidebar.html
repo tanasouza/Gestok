@@ -1,0 +1,17 @@
+{% load static %}
+
+<!-- Desktop Sidebar -->
+<aside class="gestok-sidebar d-none d-lg-flex flex-column" id="sidebarDesktop">
+  {% include 'components/_sidebar_content.html' %}
+</aside>
+
+<!-- Mobile Sidebar (Offcanvas) -->
+<div class="offcanvas offcanvas-start gestok-sidebar-offcanvas" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel" style="width: 260px;">
+  <div class="offcanvas-header border-bottom border-secondary border-opacity-25 py-2">
+    <h5 class="offcanvas-title text-white" id="sidebarOffcanvasLabel">Menu</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+  </div>
+  <div class="offcanvas-body p-0 d-flex flex-column">
+    {% include 'components/_sidebar_content.html' %}
+  </div>
+</div>

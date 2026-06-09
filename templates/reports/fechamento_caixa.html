@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Fechamento de Caixa | Gestok{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0 text-gray-800"><i class="bi bi-journal-text text-primary me-2"></i>Fechamento de Caixa</h1>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3 bg-light">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label for="data" class="form-label small fw-bold mb-1">Data do Fechamento</label>
+                <input type="date" name="data" id="data" class="form-control form-control-sm" value="{{ data_filter }}" required>
+            </div>
+            <div class="col-md-5">
+                <label for="caixa" class="form-label small fw-bold mb-1">Caixa Responsável</label>
+                <select name="caixa" id="caixa" class="form-select form-select-sm">
+                    <option value="">[ Todos ]</option>
+                    {% for c in caixas %}
+                        <option value="{{ c.id }}" {% if caixa_filter == c.id|stringformat:"s" %}selected{% endif %}>
+                            {{ c.nome_completo|default:c.matricula }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary btn-sm w-100">
+                    <i class="bi bi-filter"></i> Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card-body p-4">
+        <div class="text-center mb-4 d-none d-print-block">
+            <h3>Gestok - Relatório de Fechamento de Caixa</h3>
+            <p>Data: {{ data_filter|date:"d/m/Y" }}</p>
+        </div>
+
+        <h6 class="fw-bold mb-3 text-uppercase text-muted">Resumo das Vendas</h6>
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card h-100 p-3 shadow-sm border-left-primary">
+                    <div class="card-body p-0">
+                        <div class="h6 font-weight-bold text-primary text-uppercase mb-1">Total vendido</div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800">R$ {{ faturamento_total|floatformat:2 }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 p-3 shadow-sm border-left-success">
+                    <div class="card-body p-0">
+                        <div class="h6 font-weight-bold text-success text-uppercase mb-1">Vendas finalizadas</div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800">{{ vendas_finalizadas_qtd }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 p-3 shadow-sm border-left-danger">
+                    <div class="card-body p-0">
+                        <div class="h6 font-weight-bold text-danger text-uppercase mb-1">Vendas estornadas</div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800">{{ vendas_estornadas_qtd }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h6 class="fw-bold mb-3 mt-4 text-uppercase text-muted">Formas de Pagamento</h6>
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card h-100 p-3 shadow-sm">
+                    <div class="card-body p-0 d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="h6 font-weight-bold text-muted text-uppercase mb-1">Dinheiro</div>
+                            <div class="h4 mb-0 font-weight-bold text-gray-800">R$ {{ total_dinheiro|floatformat:2 }}</div>
+                        </div>
+                        <i class="bi bi-cash icon-md text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 p-3 shadow-sm">
+                    <div class="card-body p-0 d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="h6 font-weight-bold text-muted text-uppercase mb-1">Pix</div>
+                            <div class="h4 mb-0 font-weight-bold text-gray-800">R$ {{ total_pix|floatformat:2 }}</div>
+                        </div>
+                        <i class="bi bi-qr-code icon-md text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 p-3 shadow-sm">
+                    <div class="card-body p-0 d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="h6 font-weight-bold text-muted text-uppercase mb-1">Cartão</div>
+                            <div class="h4 mb-0 font-weight-bold text-gray-800">R$ {{ total_cartao|floatformat:2 }}</div>
+                        </div>
+                        <i class="bi bi-credit-card icon-md text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-light border border-2 d-flex justify-content-between align-items-center fs-4 fw-bold mt-4 shadow-sm">
+            <span>Valor Líquido Recebido:</span>
+            <span class="text-primary">R$ {{ faturamento_total|floatformat:2 }}</span>
+        </div>
+
+        <div class="d-flex justify-content-center gap-3 mt-5 d-print-none">
+            <button type="button" onclick="window.print()" class="btn btn-secondary btn-lg shadow-sm">
+                <i class="bi bi-printer me-2"></i> Imprimir Relatório
+            </button>
+            <a href="{% url 'reports:cash_closing_pdf' %}?data={{ data_filter }}&caixa={{ caixa_filter }}" class="btn btn-primary btn-lg shadow-sm">
+                <i class="bi bi-filetype-pdf me-2"></i> Exportar PDF
+            </a>
+            <a href="{% url 'reports:cash_closing_csv' %}?data={{ data_filter }}&caixa={{ caixa_filter }}" class="btn btn-success btn-lg shadow-sm">
+                <i class="bi bi-filetype-csv me-2"></i> Exportar CSV
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

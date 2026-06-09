@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load gestok_tags %}
+
+{% block title %}Detalhes da Venda {{ sale.numero_venda }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <a href="{% url 'sales:my_sales' %}" class="text-decoration-none text-muted small d-flex align-items-center gap-1 mb-2">
+        <i class="bi bi-arrow-left"></i> Voltar para listagem
+      </a>
+      <h1 class="h3 mb-0 text-gray-800">
+        Venda <span class="text-primary">{{ sale.numero_venda }}</span>
+      </h1>
+    </div>
+    <div>
+      {% status_badge sale.status %}
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Left Column: Details -->
+    <div class="col-12 col-lg-8">
+      <!-- Items Card -->
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3 border-0">
+          <h5 class="card-title fw-bold mb-0 text-gray-800">Itens da Venda</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th class="ps-4">Código</th>
+                  <th>Produto</th>
+                  <th class="text-center">Quantidade</th>
+                  <th class="text-end">Preço Unitário</th>
+                  <th class="text-end pe-4">Subtotal</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in sale.itens.all %}
+                <tr>
+                  <td class="ps-4 text-muted small fw-mono">{{ item.produto.codigo_produto }}</td>
+                  <td class="fw-semibold text-gray-800">{{ item.produto.nome }}</td>
+                  <td class="text-center">{{ item.quantidade }}</td>
+                  <td class="text-end">{{ item.preco_unitario|currency_brl }}</td>
+                  <td class="text-end fw-semibold text-dark pe-4">{{ item.subtotal|currency_brl }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+              <tfoot>
+                <tr class="table-light">
+                  <td colspan="4" class="text-end fw-bold ps-4">Valor Total Geral:</td>
+                  <td class="text-end fw-bold text-primary pe-4 fs-5">{{ sale.valor_total|currency_brl }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Meta Info & Actions -->
+    <div class="col-12 col-lg-4">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3 border-0">
+          <h5 class="card-title fw-bold mb-0 text-gray-800">Resumo e Registro</h5>
+        </div>
+        <div class="card-body">
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+              <span class="text-muted small">Vendedor:</span>
+              <span class="fw-medium text-gray-800">{{ sale.vendedor.nome_completo }}</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+              <span class="text-muted small">Caixa Responsável:</span>
+              <span class="fw-medium text-gray-800">
+                {% if sale.caixa_responsavel %}
+                  {{ sale.caixa_responsavel.nome_completo }}
+                {% else %}
+                  <span class="text-muted small">Pendente</span>
+                {% endif %}
+              </span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+              <span class="text-muted small">Abertura da Venda:</span>
+              <span class="text-gray-800">{{ sale.data_venda|date:"d/m/Y H:i" }}</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+              <span class="text-muted small">Finalização da Venda:</span>
+              <span class="text-gray-800">
+                {% if sale.data_finalizacao %}
+                  {{ sale.data_finalizacao|date:"d/m/Y H:i" }}
+                {% else %}
+                  <span class="text-muted small">Pendente</span>
+                {% endif %}
+              </span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+              <span class="text-muted small">Forma de Pagamento:</span>
+              <span class="fw-semibold text-dark">
+                {% if sale.forma_pagamento %}
+                  {{ sale.get_forma_pagamento_display }}
+                {% else %}
+                  <span class="text-muted small">Pendente</span>
+                {% endif %}
+              </span>
+            </li>
+          </ul>
+
+          <!-- Action Buttons -->
+          {% if request.user.eh_administrador and sale.status == 'FINALIZADA' and not sale.estornada %}
+          <div class="mt-4 pt-3 border-top">
+            <button type="button" class="btn btn-danger w-100 d-flex align-items-center justify-content-center gap-2"
+                    data-bs-toggle="modal" data-bs-target="#refundModal">
+              <i class="bi bi-arrow-counterclockwise"></i>
+              <span>Estornar Venda</span>
+            </button>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Refund Modal (Admin Only) -->
+{% if request.user.eh_administrador and sale.status == 'FINALIZADA' and not sale.estornada %}
+<div class="modal fade" id="refundModal" tabindex="-1" aria-labelledby="refundModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold" id="refundModalLabel">Confirmar Estorno</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <form action="{% url 'sales:sale_refund' sale.pk %}" method="post" id="refundForm">
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="alert alert-warning d-flex align-items-center gap-2">
+            <i class="bi bi-exclamation-triangle-fill text-warning fs-4"></i>
+            <span class="small">Atenção! Esta ação é irreversível. O estoque correspondente aos itens desta venda será devolvido ao catálogo de produtos.</span>
+          </div>
+
+          <div class="mb-3">
+            <label for="motivo" class="form-label small fw-semibold">Motivo do Estorno <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="motivo" name="motivo" rows="3" required
+                      placeholder="Descreva o motivo do estorno desta venda..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-danger">Confirmar Estorno</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

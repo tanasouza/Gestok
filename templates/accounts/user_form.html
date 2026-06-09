@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}{% if is_edit %}Editar Usuário{% else %}Cadastrar Usuário{% endif %}{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'accounts:user_list' %}">Usuários</a></li>
+<li class="breadcrumb-item active text-white" aria-current="page">{% if is_edit %}Editar{% else %}Cadastrar{% endif %}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+  <div class="col-12 col-lg-8">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white border-bottom py-3">
+        <h3 class="card-title h5 mb-0 fw-bold text-dark">
+          <i class="bi {% if is_edit %}bi-person-gear{% else %}bi-person-plus{% endif %} text-primary me-2"></i>
+          {% if is_edit %}Editar Usuário: {{ form.instance.nome_completo }}{% else %}Cadastrar Novo Usuário{% endif %}
+        </h3>
+      </div>
+      <div class="card-body p-4">
+        <form method="post" novalidate class="user-form">
+          {% csrf_token %}
+
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+              {% for error in form.non_field_errors %}
+                {{ error }}
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          <div class="row g-3">
+            <!-- Full Name -->
+            <div class="col-12">
+              <label for="{{ form.nome_completo.id_for_label }}" class="form-label">
+                Nome completo <span class="required-asterisk">*</span>
+              </label>
+              {% render_field form.nome_completo class+="form-control" %}
+              {% if form.nome_completo.errors %}
+                <div class="invalid-feedback d-block">{{ form.nome_completo.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Email & Phone -->
+            <div class="col-12 col-md-6">
+              <label for="{{ form.email.id_for_label }}" class="form-label">
+                Email
+              </label>
+              {% render_field form.email class+="form-control" %}
+              {% if form.email.errors %}
+                <div class="invalid-feedback d-block">{{ form.email.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label for="{{ form.telefone.id_for_label }}" class="form-label">
+                Telefone
+              </label>
+              {% render_field form.telefone class+="form-control" %}
+              {% if form.telefone.errors %}
+                <div class="invalid-feedback d-block">{{ form.telefone.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Operational Role -->
+            <div class="col-12">
+              <label for="{{ form.cargo.id_for_label }}" class="form-label">
+                Cargo operacional <span class="required-asterisk">*</span>
+              </label>
+              {% render_field form.cargo class+="form-control" %}
+              {% if form.cargo.errors %}
+                <div class="invalid-feedback d-block">{{ form.cargo.errors.0 }}</div>
+              {% endif %}
+              <small class="text-muted d-block mt-1">As permissões são definidas automaticamente pelo cargo selecionado.</small>
+            </div>
+
+            <div class="col-12 mt-4">
+              <h6 class="border-bottom pb-2 mb-3 form-label-sm">Endereço</h6>
+              <div class="row g-3">
+                <div class="col-12 col-md-4">
+                  <label for="{{ form.cep.id_for_label }}" class="form-label">CEP</label>
+                  {{ form.cep }}
+                  {% if form.cep.errors %}
+                    <div class="invalid-feedback d-block">{{ form.cep.errors.0 }}</div>
+                  {% endif %}
+                </div>
+                <div class="col-12 col-md-8">
+                  <label for="{{ form.setor.id_for_label }}" class="form-label">Setor ou bairro</label>
+                  {{ form.setor }}
+                  {% if form.setor.errors %}
+                    <div class="invalid-feedback d-block">{{ form.setor.errors.0 }}</div>
+                  {% endif %}
+                </div>
+                <div class="col-12 col-md-8">
+                  <label for="{{ form.rua.id_for_label }}" class="form-label">Nome da rua</label>
+                  {{ form.rua }}
+                  {% if form.rua.errors %}
+                    <div class="invalid-feedback d-block">{{ form.rua.errors.0 }}</div>
+                  {% endif %}
+                </div>
+                <div class="col-12 col-md-4">
+                  <label for="{{ form.numero.id_for_label }}" class="form-label">Número</label>
+                  {{ form.numero }}
+                  {% if form.numero.errors %}
+                    <div class="invalid-feedback d-block">{{ form.numero.errors.0 }}</div>
+                  {% endif %}
+                </div>
+                <div class="col-12">
+                  <div class="form-check d-flex align-items-center gap-2">
+                    {{ form.sem_numero }}
+                    <label class="form-check-label mb-0" for="{{ form.sem_numero.id_for_label }}">Imóvel sem número</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Active Status (Only in Edit Mode) -->
+            {% if is_edit and form.ativo %}
+            <div class="col-12">
+              <div class="form-check form-switch mt-2">
+                {% render_field form.ativo class+="form-check-input" %}
+                <label class="form-check-label fw-medium text-dark" for="{{ form.ativo.id_for_label }}">
+                  Usuário Ativo (Acesso Liberado)
+                </label>
+              </div>
+              <small class="text-muted d-block mt-1">Desmarcar desativa o usuário e impede o login.</small>
+            </div>
+            {% endif %}
+          </div>
+
+          <hr class="my-4">
+
+          <div class="d-flex justify-content-end gap-2">
+            <a href="{% url 'accounts:user_list' %}" class="btn btn-outline-secondary px-4">
+              Cancelar
+            </a>
+            <button type="submit" class="btn btn-primary px-4">
+              <i class="bi bi-save me-1"></i> Salvar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.querySelector('.user-form');
+  const noNumber = form?.querySelector('#id_sem_numero');
+  const number = form?.querySelector('#id_numero');
+  if (!noNumber || !number) return;
+
+  function syncNumberField() {
+    number.disabled = noNumber.checked;
+    if (noNumber.checked) number.value = '';
+  }
+
+  noNumber.addEventListener('change', syncNumberField);
+  syncNumberField();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% load gestok_tags %}
+<div class="offcanvas-header border-bottom py-3">
+    <div>
+        <h5 class="offcanvas-title fw-bold" style="font-size: 16px; color: var(--g-on-surface);">Detalhes da Venda</h5>
+        <span style="font-size: 11px; color: var(--g-on-surface-variant); text-transform: uppercase; letter-spacing: 0.05em;">#VND-{{ sale.numero_venda }}</span>
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+</div>
+
+<div class="offcanvas-body d-flex flex-column gap-4 p-4" style="background-color: var(--g-surface);">
+
+    <!-- Itens da Venda -->
+    <div>
+        <h6 class="mb-3" style="font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--g-on-surface-variant);">Itens Registrados</h6>
+        <div class="d-flex flex-column gap-2">
+            {% for item in sale.itens.all %}
+            <div class="gestok-card p-3 d-flex align-items-center gap-3" style="border-radius: 8px;">
+                <div class="rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background-color: rgba(69,70,77,0.1); color: var(--g-on-surface-variant); flex-shrink: 0;">
+                    <span class="material-symbols-outlined" style="font-size: 20px;">inventory_2</span>
+                </div>
+                <div class="flex-grow-1 min-w-0">
+                    <div class="text-truncate fw-semibold" style="font-size: 13px; color: var(--g-on-surface);">{{ item.produto.nome }}</div>
+                    <div style="font-size: 11px; color: var(--g-outline);">SKU: {{ item.produto.codigo_produto }}</div>
+                </div>
+                <div class="text-end flex-shrink-0">
+                    <div style="font-size: 11px; color: var(--g-on-surface-variant);">{{ item.quantidade }} un &times; {{ item.preco_unitario|floatformat:2 }}</div>
+                    <div class="fw-bold" style="font-size: 13px; font-family: 'Inter', monospace; color: var(--g-on-surface);">R$ {{ item.subtotal|floatformat:2 }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Informações de Auditoria -->
+    <div>
+        <h6 class="mb-3" style="font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--g-on-surface-variant);">Informações de Auditoria</h6>
+        <div class="gestok-card p-3" style="border-radius: 8px;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span style="font-size: 12px; color: var(--g-on-surface-variant);">Data e Hora</span>
+                <span style="font-size: 12px; font-weight: 500; color: var(--g-on-surface);">{{ sale.data_venda|date:"d M Y, H:i:s" }}</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span style="font-size: 12px; color: var(--g-on-surface-variant);">Usuário Responsável</span>
+                <span class="d-flex align-items-center gap-2" style="font-size: 12px; font-weight: 500; color: var(--g-on-surface);">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 20px; height: 20px; background-color: var(--g-primary-container); color: #fff; font-size: 9px;">
+                        {{ sale.vendedor.get_short_name|slice:":2" }}
+                    </div>
+                    {{ sale.vendedor.nome_completo }}
+                </span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span style="font-size: 12px; color: var(--g-on-surface-variant);">Forma de Pagamento</span>
+                <span style="font-size: 12px; font-weight: 600; color: var(--g-on-surface);">{{ sale.get_forma_pagamento_display|default:"Pendente" }}</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top" style="border-color: var(--g-outline-variant) !important;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--g-on-surface);">Valor Total</span>
+                <span style="font-size: 16px; font-weight: 700; font-family: 'Inter', monospace; color: var(--g-success);">R$ {{ sale.valor_total|floatformat:2 }}</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="offcanvas-footer border-top p-3 bg-white d-flex gap-2">
+    <button type="button" class="btn btn-light flex-grow-1 border fw-semibold" style="font-size: 13px;" onclick="window.print();">
+        Imprimir Recibo
+    </button>
+    {% if request.user.eh_administrador and sale.status == 'FINALIZADA' and not sale.estornada %}
+    <form action="{% url 'sales:sale_refund' sale.pk %}" method="post" class="flex-grow-1" onsubmit="return confirm('Atenção! Esta ação é irreversível. Deseja realmente estornar esta venda e devolver o estoque?');">
+        {% csrf_token %}
+        <input type="hidden" name="motivo" value="Estorno via painel lateral.">
+        <button type="submit" class="btn btn-outline-danger w-100 fw-semibold" style="font-size: 13px;">
+            Estornar Venda
+        </button>
+    </form>
+    {% endif %}
+</div>

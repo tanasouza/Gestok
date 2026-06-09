@@ -1,0 +1,67 @@
+{% load static %}
+
+<!-- Navigation Links -->
+<div class="flex-grow-1 overflow-hidden py-3 px-3" style="display: flex; flex-direction: column; gap: 12px;">
+
+  {% if request.user.eh_administrador %}
+  <a href="{% url 'reports:dashboard' %}" class="sidebar-nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+    <span class="material-symbols-outlined">dashboard</span>
+    <span>Dashboard</span>
+  </a>
+  {% endif %}
+
+  <!-- Vendas Section -->
+  {% if request.user.pode_vender %}
+  <a href="{% url 'sales:my_sales' %}" class="sidebar-nav-link {% if request.resolver_match.url_name == 'my_sales' %}active{% endif %}">
+    <span class="material-symbols-outlined">payments</span>
+    <span>Minhas Vendas</span>
+  </a>
+  {% endif %}
+
+  <!-- Products Section -->
+  {% if request.user.pode_ver_produtos %}
+  <a href="{% url 'products:product_list' %}" class="sidebar-nav-link {% if request.resolver_match.url_name == 'product_list' or request.resolver_match.url_name == 'product_create' or request.resolver_match.url_name == 'product_edit' %}active{% endif %}">
+    <span class="material-symbols-outlined">inventory_2</span>
+    <span>Produtos</span>
+  </a>
+  {% endif %}
+
+  {% if request.user.pode_ver_movimentacoes %}
+  <a href="{% url 'products:movement_list' %}" class="sidebar-nav-link {% if request.resolver_match.url_name == 'movement_list' %}active{% endif %}">
+    <span class="material-symbols-outlined">swap_horiz</span>
+    <span>Movimentações</span>
+  </a>
+  {% endif %}
+
+  <!-- Caixa Section -->
+  {% if request.user.pode_operar_caixa %}
+  <a href="{% url 'cashier:pdv' %}" class="sidebar-nav-link {% if request.resolver_match.app_name == 'cashier' %}active{% endif %}">
+    <span class="material-symbols-outlined">point_of_sale</span>
+    <span>Caixa / PDV</span>
+  </a>
+  {% endif %}
+
+  <!-- Usuários Section -->
+  {% if request.user.eh_administrador %}
+  <a href="{% url 'accounts:user_list' %}" class="sidebar-nav-link {% if request.resolver_match.url_name == 'user_list' or request.resolver_match.url_name == 'user_create' or request.resolver_match.url_name == 'user_inactive_list' or request.resolver_match.url_name == 'user_edit' %}active{% endif %}">
+    <span class="material-symbols-outlined">group</span>
+    <span>Usuários</span>
+  </a>
+  {% endif %}
+
+  <a href="{% url 'accounts:profile' %}" class="sidebar-nav-link {% if request.resolver_match.url_name == 'profile' or request.resolver_match.url_name == 'change_password' %}active{% endif %}">
+    <span class="material-symbols-outlined">person</span>
+    <span>Perfil</span>
+  </a>
+
+</div>
+
+<div class="sidebar-logout">
+  <form action="{% url 'accounts:logout' %}" method="post">
+    {% csrf_token %}
+    <button type="submit" class="sidebar-logout-button" title="Sair" aria-label="Sair">
+      <span class="material-symbols-outlined">logout</span>
+      <span>Logout</span>
+    </button>
+  </form>
+</div>

@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+
+{% block title %}Produtos | Gestok{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-heading mb-4">
+    <div class="page-heading-row">
+        <div class="page-heading-copy">
+            <h1 class="page-header-title mb-0">Produtos</h1>
+            <p class="page-header-subtitle">Gerencie o catálogo de produtos e os níveis de estoque da sua operação.</p>
+        </div>
+        {% if user.eh_administrador %}
+        <a href="{% url 'products:product_create' %}" class="btn btn-dark d-flex align-items-center gap-2 px-4 py-2 rounded-3 shadow-sm btn-product-form page-heading-action" style="font-size: 14px; font-weight: 600;">
+            <span class="material-symbols-outlined" style="font-size: 20px;">add</span> Novo Produto
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Filters Card -->
+<div class="gestok-card mb-4 p-4">
+    <form method="get" class="gestok-filter-form filter-3">
+        <div class="gestok-filter-field">
+            <label for="search" class="form-label-sm d-block mb-2">Buscar Produto</label>
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0 text-muted" style="border-color: var(--g-outline-variant);">
+                    <span class="material-symbols-outlined" style="font-size: 20px;">search</span>
+                </span>
+                <input type="text" name="search" id="search" class="form-control border-start-0 ps-0" placeholder="Nome ou código do produto..." value="{{ request.GET.search }}" style="border-color: var(--g-outline-variant); box-shadow: none;">
+            </div>
+        </div>
+        <div class="gestok-filter-field">
+            <label for="categoria" class="form-label-sm d-block mb-2">Categoria</label>
+            <select name="categoria" id="categoria" class="form-select" style="border-color: var(--g-outline-variant); box-shadow: none;">
+                <option value="">Todas as categorias</option>
+                {% for cat in categorias %}
+                    <option value="{{ cat.id }}" {% if request.GET.categoria == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="gestok-filter-field d-flex justify-content-end">
+            <button type="submit" class="btn btn-light border px-3 d-flex align-items-center justify-content-center gap-2 gestok-filter-action">
+                <span class="material-symbols-outlined" style="font-size: 18px;">filter_list</span> Filtrar
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Table Card -->
+<div class="gestok-card overflow-hidden">
+    <div class="table-responsive border-0 mb-0">
+        <table class="table gestok-table mb-0">
+            <thead>
+                <tr>
+                    <th class="px-4">Código</th>
+                    <th>Nome</th>
+                    <th>Categoria</th>
+                    <th class="text-end">Preço de Venda</th>
+                    <th class="text-center">Estoque</th>
+                    <th class="text-center">Status</th>
+                    {% if user.eh_administrador %}<th class="text-end px-4">Ações</th>{% endif %}
+                </tr>
+            </thead>
+            <tbody class="border-top-0">
+                {% for p in object_list %}
+                <tr class="{% if p.estoque_atual <= p.estoque_minimo %}bg-danger bg-opacity-10{% endif %}">
+                    <td class="px-4"><span style="font-weight: 600; color: var(--g-on-surface);">{{ p.codigo_produto }}</span></td>
+                    <td style="font-weight: 600; color: var(--g-on-surface);">{{ p.nome }}</td>
+                    <td style="color: var(--g-on-surface-variant);">{{ p.categoria.nome|default:"-" }}</td>
+                    <td class="text-end" style="font-family: 'Inter', monospace; font-weight: 600; color: var(--g-success);">R$ {{ p.preco_venda|floatformat:2 }}</td>
+                    <td class="text-center">
+                        <span style="font-family: 'Inter', monospace; font-weight: 700; color: {% if p.estoque_atual <= p.estoque_minimo %}var(--g-error){% else %}var(--g-on-surface){% endif %};">
+                            {{ p.estoque_atual }}
+                        </span>
+                        {% if p.estoque_atual <= p.estoque_minimo %}
+                            <span class="material-symbols-outlined ms-1" style="color: var(--g-error); font-size: 16px; vertical-align: text-bottom;" title="Estoque crítico">warning</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if p.ativo %}
+                            <span class="badge badge-soft-success px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"><span class="material-symbols-outlined" style="font-size: 14px;">check</span> Ativo</span>
+                        {% else %}
+                            <span class="badge badge-soft-secondary px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"><span class="material-symbols-outlined" style="font-size: 14px;">do_not_disturb_on</span> Inativo</span>
+                        {% endif %}
+                    </td>
+                    {% if user.eh_administrador %}
+                    <td class="text-end px-4">
+                        <a href="{% url 'products:product_update' p.pk %}" class="btn btn-sm btn-light border text-muted d-inline-flex align-items-center justify-content-center btn-product-form" style="width: 32px; height: 32px; border-color: var(--g-outline-variant) !important;" title="Editar Produto" aria-label="Editar Produto">
+                            <span class="material-symbols-outlined" style="font-size: 18px;">edit</span>
+                        </a>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center py-5" style="color: rgba(69,70,77,0.4);">
+                        <span class="material-symbols-outlined d-block mb-3" style="font-size: 48px; opacity: 0.5;">inventory_2</span>
+                        Nenhum produto encontrado.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Footer/Pagination -->
+    <div class="bg-white border-top py-3 px-4 d-flex align-items-center justify-content-between" style="border-color: var(--g-outline-variant) !important;">
+        <div style="font-size: 12px; font-weight: 500; color: var(--g-on-surface-variant);">
+            {% if page_obj.paginator.count > 0 %}
+                Mostrando {{ page_obj.start_index }} a {{ page_obj.end_index }} de {{ page_obj.paginator.count }} registros
+            {% else %}
+                Nenhum registro encontrado
+            {% endif %}
+        </div>
+
+        {% if page_obj %}
+        <nav aria-label="Navegação da página">
+            <ul class="pagination pagination-sm mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link text-dark border-light" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}"><span class="material-symbols-outlined" style="font-size: 16px;">chevron_left</span></a></li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link bg-dark border-dark text-white">{{ num }}</span></li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item"><a class="page-link text-dark border-light" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}">{{ num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link text-dark border-light" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}"><span class="material-symbols-outlined" style="font-size: 16px;">chevron_right</span></a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Offcanvas Container for Product Form -->
+<div class="offcanvas offcanvas-end shadow-sm" tabindex="-1" id="offcanvasProductEdit" aria-labelledby="offcanvasProductEditLabel" style="width: 440px; border-left: none;">
+    <div id="offcanvasProductEditContent" class="d-flex flex-column h-100">
+        <div class="d-flex justify-content-center align-items-center h-100">
+            <div class="spinner-border text-dark" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const formButtons = document.querySelectorAll('.btn-product-form');
+    const offcanvasEl = document.getElementById('offcanvasProductEdit');
+    const offcanvasContent = document.getElementById('offcanvasProductEditContent');
+    const offcanvasInstance = new bootstrap.Offcanvas(offcanvasEl);
+
+    const loaderHtml = `
+        <div class="d-flex justify-content-center align-items-center h-100">
+            <div class="spinner-border text-dark" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+        </div>
+    `;
+
+    const errorHtml = `
+        <div class="p-4 text-center text-danger">
+            <span class="material-symbols-outlined mb-2" style="font-size: 48px;">error</span>
+            <p>Erro ao carregar o formulário.</p>
+        </div>
+    `;
+
+    function bindProductForm() {
+        const form = offcanvasContent.querySelector('#productForm');
+        if (!form) return;
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const submitButton = form.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.innerHTML = `
+                    <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                    Salvando...
+                `;
+            }
+
+            fetch(form.getAttribute('action'), {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new FormData(form)
+            })
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                    return null;
+                }
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.text();
+            })
+            .then(html => {
+                if (!html) return;
+                offcanvasContent.innerHTML = html;
+                bindProductForm();
+            })
+            .catch(error => {
+                console.error('Error saving product:', error);
+                offcanvasContent.innerHTML = `
+                    <div class="p-4 text-center text-danger">
+                        <span class="material-symbols-outlined mb-2" style="font-size: 48px;">error</span>
+                        <p>Erro ao salvar o produto.</p>
+                    </div>
+                `;
+            });
+        });
+    }
+
+    formButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const url = this.getAttribute('href');
+
+            offcanvasContent.innerHTML = loaderHtml;
+            offcanvasInstance.show();
+
+            fetch(url + '?partial=true', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.text();
+            })
+            .then(html => {
+                offcanvasContent.innerHTML = html;
+                bindProductForm();
+            })
+            .catch(error => {
+                console.error('Error fetching product form:', error);
+                offcanvasContent.innerHTML = errorHtml;
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

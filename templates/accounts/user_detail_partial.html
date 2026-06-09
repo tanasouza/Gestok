@@ -1,0 +1,76 @@
+<div class="d-flex flex-column h-100">
+    <div class="offcanvas-header border-bottom py-3">
+        <div>
+            <h5 class="offcanvas-title fw-bold" style="font-size: 16px; color: var(--g-on-surface);">Detalhes do Usuário</h5>
+            <span style="font-size: 11px; color: var(--g-on-surface-variant); text-transform: uppercase;">Matrícula #{{ selected_user.matricula }}</span>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+    </div>
+
+    <div class="offcanvas-body overflow-auto p-4" style="background-color: var(--g-surface);">
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="rounded d-flex align-items-center justify-content-center fw-bold text-uppercase"
+                 style="width: 52px; height: 52px; background-color: var(--g-surface-container-high); color: var(--g-on-surface); font-size: 18px;">
+                {{ selected_user.get_short_name|slice:":2" }}
+            </div>
+            <div>
+                <div class="fw-bold" style="color: var(--g-on-surface);">{{ selected_user.nome_completo }}</div>
+                <div style="font-size: 12px; color: var(--g-on-surface-variant);">{{ selected_user.get_cargo_display }}</div>
+            </div>
+        </div>
+
+        <section class="mb-4">
+            <h6 class="mb-3 border-bottom pb-2" style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--g-on-surface-variant);">
+                Informações pessoais
+            </h6>
+            <dl class="mb-0">
+                <div class="d-flex justify-content-between gap-3 py-2">
+                    <dt class="fw-normal" style="color: var(--g-on-surface-variant);">E-mail</dt>
+                    <dd class="mb-0 text-end" style="color: var(--g-on-surface);">{{ selected_user.email|default:"-" }}</dd>
+                </div>
+                <div class="d-flex justify-content-between gap-3 py-2">
+                    <dt class="fw-normal" style="color: var(--g-on-surface-variant);">Telefone</dt>
+                    <dd class="mb-0 text-end" style="color: var(--g-on-surface);">{{ selected_user.telefone|default:"-" }}</dd>
+                </div>
+                <div class="py-2">
+                    <dt class="fw-normal mb-1" style="color: var(--g-on-surface-variant);">Endereço</dt>
+                    <dd class="mb-0" style="color: var(--g-on-surface);">{{ selected_user.endereco_formatado|default:"-" }}</dd>
+                </div>
+            </dl>
+        </section>
+
+        <section>
+            <h6 class="mb-3 border-bottom pb-2" style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--g-on-surface-variant);">
+                Acesso ao sistema
+            </h6>
+            <dl class="mb-0">
+                <div class="d-flex justify-content-between gap-3 py-2">
+                    <dt class="fw-normal" style="color: var(--g-on-surface-variant);">Cargo operacional</dt>
+                    <dd class="mb-0 text-end" style="color: var(--g-on-surface);">{{ selected_user.get_cargo_display }}</dd>
+                </div>
+                <div class="d-flex justify-content-between align-items-center gap-3 py-2">
+                    <dt class="fw-normal" style="color: var(--g-on-surface-variant);">Status</dt>
+                    <dd class="mb-0">
+                        {% if selected_user.ativo %}
+                        <span class="badge badge-soft-success rounded-pill px-3 py-2">Ativo</span>
+                        {% else %}
+                        <span class="badge badge-soft-secondary rounded-pill px-3 py-2">Inativo</span>
+                        {% endif %}
+                    </dd>
+                </div>
+                <div class="d-flex justify-content-between gap-3 py-2">
+                    <dt class="fw-normal" style="color: var(--g-on-surface-variant);">Cadastrado em</dt>
+                    <dd class="mb-0 text-end" style="color: var(--g-on-surface);">{{ selected_user.date_joined|date:"d/m/Y H:i" }}</dd>
+                </div>
+            </dl>
+        </section>
+    </div>
+
+    <div class="offcanvas-footer border-top p-3 bg-white d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-light fw-semibold" style="font-size: 13px;" data-bs-dismiss="offcanvas">Fechar</button>
+        <a href="{% url 'accounts:user_edit' selected_user.pk %}" class="btn btn-primary px-4 fw-semibold d-flex align-items-center gap-2 btn-user-panel" style="font-size: 13px;">
+            <span class="material-symbols-outlined" style="font-size: 18px;">edit</span>
+            Editar Usuário
+        </a>
+    </div>
+</div>

@@ -1,0 +1,785 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% load gestok_tags %}
+
+{% block title %}Caixa / PDV | Gestok{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pdv-shell {
+        min-height: calc(100vh - 140px);
+    }
+    .pdv-search-card {
+        min-height: 74px;
+    }
+    .pdv-search-control {
+        height: 42px;
+        font-size: 13px;
+        border: 1px solid var(--g-outline-variant);
+        border-radius: 6px;
+        box-shadow: none;
+    }
+    .pdv-cart-card {
+        min-height: 560px;
+        background: var(--g-surface-container-lowest);
+    }
+    .pdv-cart-header {
+        background: var(--g-surface-container-low);
+        border-bottom: 1px solid var(--g-outline-variant);
+    }
+    .pdv-cart-row {
+        min-height: 64px;
+        border-bottom: 1px solid rgba(198,198,205,0.35);
+    }
+    .pdv-qty-btn {
+        width: 26px;
+        height: 26px;
+        border-radius: 4px;
+        padding: 0;
+        border-color: var(--g-outline-variant) !important;
+        color: var(--g-on-surface-variant);
+    }
+    .pdv-summary-card {
+        min-height: 560px;
+        position: sticky;
+        top: 72px;
+        background: var(--g-surface-container-lowest);
+    }
+    .pdv-payment-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+    .pdv-payment-title {
+        margin-bottom: 8px;
+        font-size: 11px;
+        line-height: 16px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--g-on-surface-variant);
+    }
+    .pdv-payment-grid .payment-method-btn {
+        min-height: 74px;
+        border-radius: 8px;
+        border: 1px solid var(--g-outline-variant);
+        background: #0b1b2f;
+        color: var(--g-on-surface);
+        font-size: 13px;
+        font-weight: 600;
+        padding: 10px 8px;
+        gap: 4px;
+    }
+    .pdv-payment-grid .payment-method-btn:hover {
+        background: var(--g-surface-container-high);
+        border-color: #426184;
+        color: var(--g-on-surface);
+    }
+    .pdv-payment-grid .btn-check:checked + .payment-method-btn {
+        border: 2px solid var(--g-primary);
+        background: rgba(79, 140, 255, 0.12);
+        color: var(--g-on-surface);
+        padding: 9px 7px;
+    }
+    .pdv-payment-grid .payment-method-btn .material-symbols-outlined {
+        margin-bottom: 0;
+        font-size: 21px;
+        color: #75aaff;
+        line-height: 1;
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .pdv-payment-grid .payment-method-btn .payment-label {
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0;
+        line-height: 18px;
+        text-transform: none;
+    }
+    .btn-finalize {
+        min-height: 46px;
+        border: 0;
+        border-radius: 8px !important;
+        background: #16a34a;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+    }
+    .btn-finalize:hover,
+    .btn-finalize:focus {
+        background: #15803d;
+        color: #fff;
+    }
+    .btn-finalize:disabled {
+        background: #16a34a;
+        color: #fff;
+        opacity: 0.55;
+    }
+    .btn-cancel-sale {
+        min-height: 42px;
+        border-radius: 8px !important;
+        border: 1px solid rgba(255, 102, 122, 0.38);
+        background: rgba(255, 102, 122, 0.14);
+        color: #ff8292;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+    }
+    .btn-cancel-sale:hover,
+    .btn-cancel-sale:focus {
+        background: rgba(255, 102, 122, 0.22);
+        border-color: #ff667a;
+        color: #ff9baa;
+    }
+    .btn-finalize .material-symbols-outlined,
+    .btn-cancel-sale .material-symbols-outlined {
+        font-size: 18px !important;
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+    }
+    .pdv-main-col {
+        flex: 0 0 66%;
+        max-width: 66%;
+    }
+    .pdv-summary-col {
+        flex: 0 0 34%;
+        max-width: 34%;
+    }
+    .pdv-empty-fill {
+        min-height: 300px;
+    }
+    .pdv-header-action {
+        min-height: 40px;
+        padding: 8px 14px;
+        border: 1px solid rgba(79, 140, 255, 0.3);
+        border-radius: 8px;
+        background: rgba(79, 140, 255, 0.14);
+        color: #8bb8ff;
+        font-size: 13px;
+        line-height: 18px;
+        font-weight: 600;
+        letter-spacing: 0;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+    .pdv-header-action:hover,
+    .pdv-header-action:focus {
+        border-color: rgba(79, 140, 255, 0.55);
+        background: rgba(79, 140, 255, 0.22);
+        color: #b2d0ff;
+    }
+    .pdv-header-action-danger {
+        border-color: rgba(255, 102, 122, 0.45);
+        background: rgba(255, 102, 122, 0.14);
+        color: #ff8292;
+        text-transform: uppercase;
+    }
+    .pdv-header-action-danger:hover,
+    .pdv-header-action-danger:focus {
+        border-color: rgba(255, 102, 122, 0.72);
+        background: rgba(255, 102, 122, 0.23);
+        color: #ffabb6;
+    }
+    .pdv-header-action .material-symbols-outlined {
+        font-size: 18px !important;
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+    }
+    @media (max-width: 991.98px) {
+        .pdv-main-col,
+        .pdv-summary-col {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+    }
+    .pdv-state-transition {
+        animation: fadeIn 0.3s ease-in-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% if estado == 'sem_caixa' %}
+<!-- =============================================
+     ESTADO 1: Abrir Caixa
+     ============================================= -->
+<div class="d-flex justify-content-center align-items-center pdv-state-transition" style="min-height: 70vh;">
+    <div style="max-width: 420px; width: 100%;">
+        {% if ultimo_caixa_fechado %}
+        <div class="gestok-card p-3 mb-3 d-flex align-items-center justify-content-between gap-3">
+            <div>
+                <div class="fw-semibold" style="color: var(--g-success);">Caixa fechado com sucesso</div>
+                <div style="font-size: 12px; color: var(--g-on-surface-variant);">
+                    Diferença: R$ {{ ultimo_caixa_fechado.diferenca_fechamento|floatformat:2 }}
+                </div>
+            </div>
+            <a
+                href="{% url 'reports:cash_closing_pdf' %}?registro={{ ultimo_caixa_fechado.id }}"
+                class="btn btn-sm btn-outline-primary d-flex align-items-center gap-2"
+            >
+                <span class="material-symbols-outlined" style="font-size: 17px;">picture_as_pdf</span>
+                PDF
+            </a>
+        </div>
+        {% endif %}
+        <div class="gestok-card p-5 text-center">
+            <div class="mb-4">
+                <span class="material-symbols-outlined" style="font-size: 64px; color: var(--g-secondary);">point_of_sale</span>
+            </div>
+            <h3 class="page-header-title mb-3">Abertura de Caixa</h3>
+            <p style="font-size: 14px; color: var(--g-on-surface-variant);" class="mb-4">
+                Você ainda não possui um caixa aberto. Informe o valor inicial de troco para começar as operações.
+            </p>
+
+            <form action="{% url 'cashier:abrir_caixa' %}" method="post">
+                {% csrf_token %}
+                <div class="mb-4 text-start">
+                    <label for="valorAbertura" class="form-label-sm d-block mb-2">Valor de Abertura (R$)</label>
+                    <input type="number" step="0.01" min="0" class="form-control form-control-lg fw-bold" id="valorAbertura" name="valor_abertura" placeholder="0.00" value="0.00" required style="font-family: 'Inter', monospace;">
+                </div>
+                <button type="submit" class="btn btn-dark btn-lg w-100 fw-bold py-3 d-flex align-items-center justify-content-center gap-2">
+                    <span class="material-symbols-outlined">lock_open</span>
+                    Abrir Caixa
+                </button>
+            </form>
+            <a href="{% url 'cashier:closing_history' %}" class="btn btn-link mt-3 d-inline-flex align-items-center gap-2 text-decoration-none">
+                <span class="material-symbols-outlined" style="font-size: 18px;">history</span>
+                Ver Fechamentos Anteriores
+            </a>
+        </div>
+    </div>
+</div>
+
+{% elif estado == 'caixa_pendente' %}
+<div class="d-flex justify-content-center align-items-center pdv-state-transition" style="min-height: 70vh;">
+    <div style="max-width: 520px; width: 100%;">
+        <div class="gestok-card p-5 text-center">
+            <span class="material-symbols-outlined mb-3" style="font-size: 56px; color: var(--g-warning);">warning</span>
+            <h3 class="page-header-title mb-2">Caixa Pendente de Fechamento</h3>
+            <p style="font-size: 14px; color: var(--g-on-surface-variant);" class="mb-4">
+                O caixa aberto em {{ caixa.data_abertura|date:"d/m/Y \à\s H:i" }} precisa ser conferido antes de iniciar as vendas de hoje.
+            </p>
+            <div class="p-3 rounded-3 mb-4 text-start" style="background: var(--g-surface-container-low);">
+                <div class="d-flex justify-content-between mb-2">
+                    <span style="color: var(--g-on-surface-variant);">Valor de abertura</span>
+                    <strong>R$ {{ caixa.valor_abertura|floatformat:2 }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span style="color: var(--g-on-surface-variant);">Vendas registradas</span>
+                    <strong>R$ {{ resumo_caixa.total_sales|floatformat:2 }}</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span style="color: var(--g-on-surface-variant);">Esperado em dinheiro</span>
+                    <strong>R$ {{ resumo_caixa.expected_cash|floatformat:2 }}</strong>
+                </div>
+            </div>
+            <button
+                type="button"
+                class="btn btn-danger w-100 d-flex align-items-center justify-content-center gap-2"
+                data-bs-toggle="modal"
+                data-bs-target="#fecharCaixaModal"
+            >
+                <span class="material-symbols-outlined" style="font-size: 18px;">lock</span>
+                Finalizar Caixa Pendente
+            </button>
+            <a href="{% url 'cashier:closing_history' %}" class="btn btn-link mt-3 d-inline-flex align-items-center gap-2 text-decoration-none">
+                <span class="material-symbols-outlined" style="font-size: 18px;">history</span>
+                Ver Fechamentos Anteriores
+            </a>
+        </div>
+    </div>
+</div>
+
+{% elif estado == 'venda_em_andamento' %}
+<!-- =============================================
+     ESTADO 2: Venda em Andamento (PDV principal)
+     ============================================= -->
+
+<!-- Page Header & Status -->
+<div class="page-heading mb-4">
+    <div class="page-heading-row">
+        <div class="page-heading-copy">
+            <h2 class="page-header-title mb-0">Ponto de Venda</h2>
+            <p class="page-header-subtitle">Operação de Venda Rápida</p>
+        </div>
+        <div class="page-heading-action d-flex align-items-center gap-2">
+            <a href="{% url 'cashier:closing_history' %}" class="pdv-header-action d-flex align-items-center gap-2">
+                <span class="material-symbols-outlined">history</span>
+                Fechamentos
+            </a>
+            <button
+                type="button"
+                class="pdv-header-action pdv-header-action-danger d-flex align-items-center gap-2"
+                data-bs-toggle="modal"
+                data-bs-target="#fecharCaixaModal"
+            >
+                <span class="material-symbols-outlined">lock</span>
+                <span>Finalizar Caixa</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- POS Grid Layout -->
+<div class="row g-3 pdv-state-transition pdv-shell">
+
+    <!-- LEFT: Search & Cart (8 columns) -->
+    <div class="pdv-main-col d-flex flex-column gap-3" style="min-height: 0;">
+
+        <!-- Product Search Bar -->
+        <div class="gestok-card pdv-search-card p-3 d-flex align-items-center gap-3">
+            <span class="material-symbols-outlined" style="font-size: 24px; color: var(--g-outline);">barcode_scanner</span>
+            <div class="position-relative flex-grow-1">
+                <span class="material-symbols-outlined position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: var(--g-on-surface-variant); font-size: 20px;">search</span>
+                <select id="produto_id" class="form-select pdv-search-control" required style="padding-left: 40px;">
+                    <option value="" selected disabled>Buscar por nome, código de barras ou SKU (F2)</option>
+                    {% for p in produtos %}
+                    <option value="{{ p.id }}" data-preco="{{ p.preco_venda|stringformat:'f' }}">{{ p.codigo_produto }} - {{ p.nome }} (R$ {{ p.preco_venda|floatformat:2 }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <input type="hidden" id="quantidade" value="1">
+            <button type="button" id="btn-add-item" class="d-none" aria-hidden="true"></button>
+        </div>
+
+        <!-- Cart List -->
+        <div class="gestok-card pdv-cart-card flex-grow-1 d-flex flex-column overflow-hidden">
+            <!-- Table Header -->
+            <div class="d-none d-md-flex px-4 py-2 pdv-cart-header">
+                <div style="width: 5%; text-align: center; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--g-on-surface-variant);">#</div>
+                <div style="width: 40%; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--g-on-surface-variant);">Produto</div>
+                <div style="width: 20%; text-align: center; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--g-on-surface-variant);">Qtd</div>
+                <div style="width: 15%; text-align: right; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--g-on-surface-variant);">Preço Un.</div>
+                <div style="width: 20%; text-align: right; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--g-on-surface-variant);">Total</div>
+            </div>
+
+            <!-- Table Body (Scrollable) -->
+            <div class="flex-grow-1 overflow-auto p-2" id="cart-body">
+                <input type="hidden" id="venda_id" value="{{ venda.id }}">
+                <div id="tbody-itens">
+                    {% for item in venda.itens.all %}
+                    <div class="cart-item pdv-cart-row d-flex align-items-center px-3 py-2 rounded" id="item-{{ item.id }}" data-item-id="{{ item.id }}" data-produto-id="{{ item.produto.id }}">
+                        <div style="width: 5%; text-align: center; font-size: 13px; color: var(--g-on-surface-variant);">
+                            {{ forloop.counter|stringformat:"02d" }}
+                        </div>
+                        <div style="width: 40%;">
+                            <p class="mb-0 fw-medium" style="font-size: 13px; color: var(--g-on-surface);">{{ item.produto.nome }}</p>
+                            <p class="mb-0" style="font-size: 11px; color: var(--g-outline);">SKU: {{ item.produto.codigo_produto }}</p>
+                        </div>
+                        <div style="width: 20%; text-align: center;" class="d-flex justify-content-center align-items-center gap-2">
+                            <button type="button" class="btn btn-sm btn-light border pdv-qty-btn btn-item-delta" data-item-id="{{ item.id }}" data-delta="-1" aria-label="Diminuir quantidade">
+                                <span class="material-symbols-outlined" style="font-size: 16px;">remove</span>
+                            </button>
+                            <span class="item-qty fw-bold" style="font-size: 13px; font-family: 'Inter', monospace; min-width: 24px; text-align: center;">{{ item.quantidade }}</span>
+                            <button type="button" class="btn btn-sm btn-light border pdv-qty-btn btn-item-delta" data-item-id="{{ item.id }}" data-delta="1" aria-label="Aumentar quantidade">
+                                <span class="material-symbols-outlined" style="font-size: 16px;">add</span>
+                            </button>
+                        </div>
+                        <div style="width: 15%; text-align: right; font-size: 13px; font-family: 'Inter', monospace; color: var(--g-on-surface-variant);">
+                            R$ {{ item.preco_unitario|floatformat:2 }}
+                        </div>
+                        <div style="width: 20%; text-align: right;" class="d-flex align-items-center justify-content-end gap-3">
+                            <span class="item-subtotal fw-semibold" style="font-size: 13px; font-family: 'Inter', monospace; color: var(--g-on-surface);">R$ {{ item.subtotal|floatformat:2 }}</span>
+                            <button type="button" class="btn btn-link p-0 btn-remover-item" data-item-id="{{ item.id }}" style="color: var(--g-outline); opacity: 0;" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0">
+                                <span class="material-symbols-outlined" style="font-size: 18px;">delete</span>
+                            </button>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div id="tr-empty" class="pdv-empty-fill d-flex flex-column align-items-center justify-content-center py-5" style="color: rgba(69,70,77,0.4);">
+                        <span class="material-symbols-outlined mb-2" style="font-size: 48px; opacity: 0.5;">shopping_basket</span>
+                        <p style="font-size: 14px;">Bipe ou busque o próximo item...</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT: Summary & Checkout (4 columns) -->
+    <div class="pdv-summary-col">
+        <div class="gestok-card pdv-summary-card p-4 d-flex flex-column h-100">
+            <h3 style="font-size: 16px; font-weight: 700; color: var(--g-on-surface);" class="border-bottom pb-3 mb-3">Resumo da Venda</h3>
+
+            <!-- Financial Breakdown -->
+            <div class="d-flex flex-column gap-2 mb-3 mt-2">
+                <div class="d-flex justify-content-between align-items-center" style="font-size: 13px; color: var(--g-on-surface-variant);">
+                    <span>Subtotal (<span id="item-count">{{ venda.itens.count }}</span> itens)</span>
+                    <span id="subtotal-display" style="font-family: 'Inter', monospace; font-weight: 500;">R$ {{ venda.valor_total|floatformat:2 }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center" style="font-size: 13px; color: var(--g-on-surface-variant);">
+                    <span>Descontos</span>
+                    <span style="font-family: 'Inter', monospace; font-weight: 500; color: var(--g-error);">- R$ 0,00</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center" style="font-size: 13px; color: var(--g-on-surface-variant);">
+                    <span>Acréscimos</span>
+                    <span style="font-family: 'Inter', monospace; font-weight: 500;">+ R$ 0,00</span>
+                </div>
+            </div>
+
+            <!-- Total -->
+            <div class="d-flex justify-content-between align-items-center pt-2 mb-3 border-top" style="border-color: var(--g-outline-variant);">
+                <span style="font-size: 13px; color: var(--g-on-surface);">Total a Pagar</span>
+                <span id="venda-total-display" style="font-family: 'Inter', monospace; font-weight: 600; font-size: 14px; color: var(--g-on-surface);">R$ {{ venda.valor_total|floatformat:2 }}</span>
+            </div>
+
+            <!-- Payment Selection (2x2 grid) -->
+            <form action="{% url 'cashier:finalizar_venda' %}" method="post" id="form-finalizar-venda" class="flex-grow-1 d-flex flex-column">
+                {% csrf_token %}
+                <input type="hidden" name="venda_id" value="{{ venda.id }}">
+
+                <div class="mb-auto">
+                    <p class="pdv-payment-title">Método de Pagamento</p>
+                    <div class="pdv-payment-grid">
+                        <div>
+                            <input type="radio" class="btn-check" name="forma_pagamento" id="pay_pix" value="PIX" required>
+                            <label class="payment-method-btn w-100" for="pay_pix">
+                                <span class="material-symbols-outlined">pin</span>
+                                <span class="payment-label">PIX</span>
+                            </label>
+                        </div>
+                        <div>
+                            <input type="radio" class="btn-check" name="forma_pagamento" id="pay_cartao" value="CARTAO" required>
+                            <label class="payment-method-btn w-100" for="pay_cartao">
+                                <span class="material-symbols-outlined">credit_card</span>
+                                <span class="payment-label">Cartão</span>
+                            </label>
+                        </div>
+                        <div>
+                            <input type="radio" class="btn-check" name="forma_pagamento" id="pay_dinheiro" value="DINHEIRO" required>
+                            <label class="payment-method-btn w-100" for="pay_dinheiro">
+                                <span class="material-symbols-outlined">payments</span>
+                                <span class="payment-label">Dinheiro</span>
+                            </label>
+                        </div>
+                        <div>
+                            <input type="radio" class="btn-check" name="forma_pagamento" id="pay_outros" value="OUTROS" required>
+                            <label class="payment-method-btn w-100" for="pay_outros">
+                                <span class="material-symbols-outlined">more_horiz</span>
+                                <span class="payment-label">Outros</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="mt-3 d-flex flex-column gap-2">
+                    <button type="submit" class="btn btn-finalize w-100 d-flex align-items-center justify-content-center gap-2 py-2 rounded-3" id="btn-finalizar" {% if not venda.itens.exists %}disabled{% endif %}>
+                        <span class="material-symbols-outlined" style="font-size: 18px;">check_circle</span>
+                        FINALIZAR VENDA
+                    </button>
+                    <button type="button" class="btn btn-cancel-sale w-100 d-flex align-items-center justify-content-center gap-2 py-2 rounded-3" id="btn-cancelar-venda">
+                        <span class="material-symbols-outlined" style="font-size: 18px;">cancel</span>
+                        CANCELAR VENDA
+                    </button>
+                </div>
+            </form>
+
+            <!-- Hidden cancel form -->
+            <form action="{% url 'cashier:cancelar_venda' %}" method="post" id="form-cancelar-venda" class="d-none">
+                {% csrf_token %}
+                <input type="hidden" name="venda_id" value="{{ venda.id }}">
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endif %}
+
+<!-- Modal Fechar Caixa -->
+{% if caixa %}
+<div class="modal fade" id="fecharCaixaModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold d-flex align-items-center gap-2">
+                    <span class="material-symbols-outlined" style="color: var(--g-error);">lock</span>
+                    Fechamento de Caixa
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{% url 'cashier:fechar_caixa' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="caixa_id" value="{{ caixa.id }}">
+                <div class="modal-body p-4">
+                    <div class="p-3 rounded-3 mb-4" style="background: var(--g-surface-container-low);">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span style="color: var(--g-on-surface-variant);">Valor de abertura</span>
+                            <strong>R$ {{ caixa.valor_abertura|floatformat:2 }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span style="color: var(--g-on-surface-variant);">Dinheiro</span>
+                            <strong>R$ {{ resumo_caixa.total_dinheiro|floatformat:2 }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span style="color: var(--g-on-surface-variant);">Pix</span>
+                            <strong>R$ {{ resumo_caixa.total_pix|floatformat:2 }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span style="color: var(--g-on-surface-variant);">Cartão</span>
+                            <strong>R$ {{ resumo_caixa.total_cartao|floatformat:2 }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between pt-2 border-top">
+                            <span style="color: var(--g-on-surface);">Esperado no caixa</span>
+                            <strong style="color: var(--g-success);">R$ {{ resumo_caixa.expected_cash|floatformat:2 }}</strong>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="valorFechamento" class="form-label-sm d-block mb-2">Valor Apurado no Caixa (R$)</label>
+                        <input type="number" step="0.01" min="0" class="form-control fw-bold" id="valorFechamento" name="valor_fechamento" placeholder="0.00" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="obsFechamento" class="form-label-sm d-block mb-2">Observações (Opcional)</label>
+                        <textarea class="form-control" id="obsFechamento" name="observacao" rows="3" placeholder="Anotações sobre o fechamento..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger px-4 fw-bold d-flex align-items-center gap-2">
+                        <span class="material-symbols-outlined" style="font-size: 18px;">lock</span>
+                        Confirmar Fechamento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+{% if estado == 'venda_em_andamento' %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const vendaId = document.getElementById('venda_id').value;
+    const tbodyItens = document.getElementById('tbody-itens');
+    const totalDisplay = document.getElementById('venda-total-display');
+    const subtotalDisplay = document.getElementById('subtotal-display');
+    const itemCountEl = document.getElementById('item-count');
+    const btnFinalizar = document.getElementById('btn-finalizar');
+    const btnAddItem = document.getElementById('btn-add-item');
+    const btnCancelar = document.getElementById('btn-cancelar-venda');
+    const formCancelar = document.getElementById('form-cancelar-venda');
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    let itemCounter = {{ venda.itens.count }};
+
+    function formatMoeda(val) {
+        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+    }
+
+    function updateTotalUI(totalVal) {
+        const formatado = formatMoeda(totalVal);
+        totalDisplay.innerText = formatado;
+        subtotalDisplay.innerText = formatado;
+
+        // Count items
+        const items = tbodyItens.querySelectorAll('.cart-item');
+        itemCountEl.innerText = items.length;
+
+        if (totalVal > 0) {
+            btnFinalizar.removeAttribute('disabled');
+            const trEmpty = document.getElementById('tr-empty');
+            if (trEmpty) trEmpty.remove();
+        } else {
+            btnFinalizar.setAttribute('disabled', 'true');
+            if (!document.getElementById('tr-empty')) {
+                tbodyItens.innerHTML = `<div id="tr-empty" class="pdv-empty-fill d-flex flex-column align-items-center justify-content-center py-5" style="color: rgba(69,70,77,0.4);">
+                    <span class="material-symbols-outlined mb-2" style="font-size: 48px; opacity: 0.5;">shopping_basket</span>
+                    <p style="font-size: 14px;">Bipe ou busque o próximo item...</p>
+                </div>`;
+            }
+        }
+    }
+
+    // Add item
+    btnAddItem.addEventListener('click', function() {
+        const selectProd = document.getElementById('produto_id');
+        const inputQtd = document.getElementById('quantidade');
+        const produtoId = selectProd.value;
+        const quantidade = inputQtd.value;
+
+        if (!produtoId) return;
+
+        fetch("{% url 'cashier:adicionar_item' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                venda_id: vendaId,
+                produto_id: produtoId,
+                quantidade: quantidade
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                let el = document.getElementById('item-' + data.item_id);
+
+                if (el) {
+                    el.querySelector('.item-qty').innerText = data.quantidade;
+                    el.querySelector('.item-subtotal').innerText = formatMoeda(data.subtotal);
+                } else {
+                    const trEmpty = document.getElementById('tr-empty');
+                    if (trEmpty) trEmpty.remove();
+                    itemCounter++;
+
+                    const div = document.createElement('div');
+                    div.className = 'cart-item pdv-cart-row d-flex align-items-center px-3 py-2 rounded';
+                    div.id = 'item-' + data.item_id;
+                    div.dataset.itemId = data.item_id;
+                    div.dataset.produtoId = produtoId;
+                    div.innerHTML = `
+                        <div style="width: 5%; text-align: center; font-size: 13px; color: var(--g-on-surface-variant);">${String(itemCounter).padStart(2, '0')}</div>
+                        <div style="width: 40%;">
+                            <p class="mb-0 fw-medium" style="font-size: 13px; color: var(--g-on-surface);">${data.produto_nome}</p>
+                            <p class="mb-0" style="font-size: 11px; color: var(--g-outline);">SKU: ${data.produto_codigo || ''}</p>
+                        </div>
+                        <div style="width: 20%; text-align: center;" class="d-flex justify-content-center align-items-center gap-2">
+                            <button type="button" class="btn btn-sm btn-light border pdv-qty-btn btn-item-delta" data-item-id="${data.item_id}" data-delta="-1" aria-label="Diminuir quantidade">
+                                <span class="material-symbols-outlined" style="font-size: 16px;">remove</span>
+                            </button>
+                            <span class="item-qty fw-bold" style="font-size: 13px; font-family: 'Inter', monospace; min-width: 24px; text-align: center;">${data.quantidade}</span>
+                            <button type="button" class="btn btn-sm btn-light border pdv-qty-btn btn-item-delta" data-item-id="${data.item_id}" data-delta="1" aria-label="Aumentar quantidade">
+                                <span class="material-symbols-outlined" style="font-size: 16px;">add</span>
+                            </button>
+                        </div>
+                        <div style="width: 15%; text-align: right; font-size: 13px; font-family: 'Inter', monospace; color: var(--g-on-surface-variant);">${formatMoeda(data.preco_unitario)}</div>
+                        <div style="width: 20%; text-align: right;" class="d-flex align-items-center justify-content-end gap-3">
+                            <span class="item-subtotal fw-semibold" style="font-size: 13px; font-family: 'Inter', monospace; color: var(--g-on-surface);">${formatMoeda(data.subtotal)}</span>
+                            <button type="button" class="btn btn-link p-0 btn-remover-item" data-item-id="${data.item_id}" style="color: var(--g-outline); opacity: 0;" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0">
+                                <span class="material-symbols-outlined" style="font-size: 18px;">delete</span>
+                            </button>
+                        </div>
+                    `;
+                    tbodyItens.appendChild(div);
+                }
+
+                updateTotalUI(data.venda_total);
+                inputQtd.value = 1;
+                selectProd.value = "";
+            } else {
+                alert('Erro: ' + data.message);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Erro ao comunicar com o servidor.');
+        });
+    });
+
+    document.getElementById('produto_id').addEventListener('change', function() {
+        btnAddItem.click();
+    });
+
+    // Remove item (event delegation)
+    tbodyItens.addEventListener('click', function(e) {
+        const deltaBtn = e.target.closest('.btn-item-delta');
+        if (deltaBtn) {
+            const itemId = deltaBtn.getAttribute('data-item-id');
+            const delta = parseInt(deltaBtn.getAttribute('data-delta'), 10);
+
+            fetch(`/cashier/atualizar-item/${itemId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ delta: delta })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    alert('Erro: ' + data.message);
+                    return;
+                }
+
+                const el = document.getElementById('item-' + itemId);
+                if (data.removed) {
+                    if (el) el.remove();
+                } else if (el) {
+                    el.querySelector('.item-qty').innerText = data.quantidade;
+                    el.querySelector('.item-subtotal').innerText = formatMoeda(data.subtotal);
+                }
+                updateTotalUI(data.venda_total);
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Erro ao comunicar com o servidor.');
+            });
+            return;
+        }
+
+        const btn = e.target.closest('.btn-remover-item');
+        if (btn) {
+            const itemId = btn.getAttribute('data-item-id');
+            if (confirm('Remover este item da venda?')) {
+                fetch(`/cashier/remover-item/${itemId}/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrfToken }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const el = document.getElementById('item-' + itemId);
+                        if (el) el.remove();
+                        updateTotalUI(data.venda_total);
+                    }
+                });
+            }
+        }
+    });
+
+    // Cancel sale button
+    btnCancelar.addEventListener('click', function() {
+        if (confirm('Deseja realmente cancelar esta venda? Todos os itens serão descartados.')) {
+            formCancelar.submit();
+        }
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'F2') {
+            e.preventDefault();
+            document.getElementById('produto_id').focus();
+        }
+        if (e.key === 'F12') {
+            e.preventDefault();
+            if (!btnFinalizar.disabled) {
+                document.getElementById('form-finalizar-venda').submit();
+            }
+        }
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            btnCancelar.click();
+        }
+    });
+
+    // Show delete button on row hover
+    tbodyItens.addEventListener('mouseenter', function(e) {
+        const item = e.target.closest('.cart-item');
+        if (item) {
+            const deleteBtn = item.querySelector('.btn-remover-item');
+            if (deleteBtn) deleteBtn.style.opacity = '1';
+        }
+    }, true);
+    tbodyItens.addEventListener('mouseleave', function(e) {
+        const item = e.target.closest('.cart-item');
+        if (item) {
+            const deleteBtn = item.querySelector('.btn-remover-item');
+            if (deleteBtn) deleteBtn.style.opacity = '0';
+        }
+    }, true);
+});
+</script>
+{% endif %}
+{% endblock %}

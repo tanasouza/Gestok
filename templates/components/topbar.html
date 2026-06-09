@@ -1,0 +1,43 @@
+<!-- TopNavBar (fixed, full-width, dark) -->
+<header class="gestok-topbar">
+  <!-- Left: Brand -->
+  <div class="topbar-brand-area">
+    <div class="d-flex flex-column justify-content-center">
+      <span class="topbar-brand-text">GESTOK</span>
+      <span class="topbar-brand-sub">Sistema de Vendas</span>
+    </div>
+  </div>
+
+  <!-- Mobile sidebar toggle -->
+  <button class="btn btn-link d-lg-none p-0 topbar-mobile-menu" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas" aria-label="Abrir menu">
+    <span class="material-symbols-outlined">menu</span>
+  </button>
+
+  <!-- Right: Actions & Profile -->
+  <div class="d-flex align-items-center">
+    <!-- Profile Avatar -->
+    <div class="dropdown">
+      <button class="btn btn-link text-decoration-none p-0 d-flex align-items-center gap-2 dropdown-toggle topbar-profile-button" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        <div class="topbar-avatar">
+          {{ user_initials }}
+        </div>
+        <span class="d-none d-md-inline topbar-username">{{ request.user.nome_cabecalho }}</span>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="userDropdown">
+        <li>
+          <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'accounts:profile' %}">
+            <span class="material-symbols-outlined" style="font-size: 20px;">person</span> Ver Perfil
+          </a>
+        </li>
+        <li>
+          <form action="{% url 'accounts:logout' %}" method="post" class="m-0">
+            {% csrf_token %}
+            <button type="submit" class="dropdown-item d-flex align-items-center gap-2">
+              <span class="material-symbols-outlined" style="font-size: 20px;">logout</span> Logout
+            </button>
+          </form>
+        </li>
+      </ul>
+    </div>
+  </div>
+</header>

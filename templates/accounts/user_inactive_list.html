@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load gestok_tags %}
+
+{% block title %}Usuários Inativos{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'accounts:user_list' %}">Usuários</a></li>
+<li class="breadcrumb-item active text-white" aria-current="page">Inativos</li>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 mt-3">
+  <h2 class="h3 mb-0 text-dark fw-bold">Usuários Inativos (Desativados)</h2>
+  <a href="{% url 'accounts:user_list' %}" class="btn btn-outline-secondary d-flex align-items-center gap-2">
+    <i class="bi bi-arrow-left"></i> Voltar para Ativos
+  </a>
+</div>
+
+<!-- Users Table -->
+<div class="table-responsive">
+  <table class="table table-hover table-striped mb-0">
+    <thead>
+      <tr>
+        <th>Matrícula</th>
+        <th>Nome Completo</th>
+        <th>Email</th>
+        <th>Cargo Operacional</th>
+        <th>Status</th>
+        <th class="text-end">Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr>
+        <td class="fw-semibold">#{{ u.matricula }}</td>
+        <td>{{ u.nome_completo }}</td>
+        <td>{{ u.email|default:"-" }}</td>
+        <td>{{ u.get_cargo_display }}</td>
+        <td>
+          {% status_badge "INATIVO" %}
+        </td>
+        <td class="text-end">
+          <div class="d-inline-flex gap-2">
+            <form action="{% url 'accounts:user_toggle_active' u.pk %}" method="post" class="d-inline">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-success" title="Reativar Usuário" data-confirm="Deseja realmente reativar este usuário? Ele voltará a ter acesso ao sistema." aria-label="Reativar">
+                <i class="bi bi-toggle-off fs-6"></i> Reativar
+              </button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="6" class="text-center py-4 text-muted">
+          <i class="bi bi-person-x fs-2 d-block mb-2"></i>
+          Nenhum usuário inativo encontrado.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<div class="mt-4">
+  {% include 'components/pagination.html' %}
+</div>
+{% endif %}
+{% endblock %}

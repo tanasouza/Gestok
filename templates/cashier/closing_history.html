@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load gestok_tags %}
+
+{% block title %}Fechamentos de Caixa{% endblock %}
+
+{% block content %}
+<div class="page-heading mb-4">
+    <div class="page-heading-row">
+        <div class="page-heading-copy">
+            <h1 class="page-header-title mb-0">Fechamentos de Caixa</h1>
+            <p class="page-header-subtitle">Consulte e exporte os caixas finalizados anteriormente.</p>
+        </div>
+        <div class="page-heading-action d-flex align-items-center gap-2">
+            <a href="{% url 'cashier:pdv' %}" class="btn btn-light border d-flex align-items-center gap-2">
+                <span class="material-symbols-outlined" style="font-size: 18px;">arrow_back</span>
+                Voltar ao Caixa
+            </a>
+            <a
+                href="{% url 'reports:cash_closing_pdf' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}"
+                class="btn btn-primary d-flex align-items-center gap-2"
+            >
+                <span class="material-symbols-outlined" style="font-size: 18px;">picture_as_pdf</span>
+                Exportar Período
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="gestok-card mb-4 p-4">
+    <form method="get" class="gestok-filter-form {% if request.user.eh_administrador %}filter-4{% else %}filter-3{% endif %}">
+        {% if request.user.eh_administrador %}
+        <div class="gestok-filter-field">
+            <label for="operador" class="form-label-sm d-block mb-2">Operador</label>
+            <select name="operador" id="operador" class="form-select">
+                <option value="">Todos os operadores</option>
+                {% for operador in operadores %}
+                <option value="{{ operador.id }}" {% if operador_filter == operador.id|stringformat:"s" %}selected{% endif %}>
+                    {{ operador.nome_completo }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+        <div class="gestok-filter-field">
+            <label for="data_inicio" class="form-label-sm d-block mb-2">Data Inicial</label>
+            <input type="date" name="data_inicio" id="data_inicio" class="form-control" value="{{ data_inicio }}">
+        </div>
+        <div class="gestok-filter-field">
+            <label for="data_fim" class="form-label-sm d-block mb-2">Data Final</label>
+            <input type="date" name="data_fim" id="data_fim" class="form-control" value="{{ data_fim }}">
+        </div>
+        <div class="gestok-filter-field d-flex justify-content-end">
+            <button type="submit" class="btn btn-light border px-3 d-flex align-items-center justify-content-center gap-2 gestok-filter-action">
+                <span class="material-symbols-outlined" style="font-size: 18px;">filter_list</span>
+                Filtrar
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="gestok-card overflow-hidden">
+    <div class="table-responsive border-0 mb-0">
+        <table class="table gestok-table mb-0">
+            <thead>
+                <tr>
+                    <th class="px-4">Caixa</th>
+                    <th>Operador</th>
+                    <th>Abertura</th>
+                    <th>Fechamento</th>
+                    <th>Valor Esperado</th>
+                    <th>Valor Declarado</th>
+                    <th>Diferença</th>
+                    <th class="text-end px-4">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cash_register in cash_registers %}
+                <tr>
+                    <td class="px-4 fw-semibold">#{{ cash_register.id }}</td>
+                    <td>{{ cash_register.operador.nome_completo }}</td>
+                    <td style="color: var(--g-on-surface-variant);">{{ cash_register.data_abertura|date:"d/m/Y H:i" }}</td>
+                    <td style="color: var(--g-on-surface-variant);">{{ cash_register.data_fechamento|date:"d/m/Y H:i" }}</td>
+                    <td class="fw-semibold">{{ cash_register.valor_esperado|currency_brl }}</td>
+                    <td class="fw-semibold">{{ cash_register.valor_fechamento|currency_brl }}</td>
+                    <td class="fw-semibold" style="color: {% if cash_register.diferenca_fechamento == 0 %}var(--g-success){% else %}var(--g-error){% endif %};">
+                        {{ cash_register.diferenca_fechamento|currency_brl }}
+                    </td>
+                    <td class="text-end px-4">
+                        <a
+                            href="{% url 'reports:cash_closing_pdf' %}?registro={{ cash_register.id }}"
+                            class="btn btn-sm btn-light border d-inline-flex align-items-center justify-content-center"
+                            style="width: 32px; height: 32px;"
+                            title="Exportar fechamento em PDF"
+                            aria-label="Exportar fechamento em PDF"
+                        >
+                            <span class="material-symbols-outlined" style="font-size: 18px;">picture_as_pdf</span>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center py-5" style="color: var(--g-outline);">
+                        <span class="material-symbols-outlined d-block mb-3" style="font-size: 48px;">receipt_long</span>
+                        Nenhum fechamento encontrado.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="bg-white border-top py-3 px-4 d-flex align-items-center justify-content-between">
+        <div style="font-size: 12px; color: var(--g-on-surface-variant);">
+            {% if page_obj.paginator.count %}
+                Mostrando {{ page_obj.start_index }} a {{ page_obj.end_index }} de {{ page_obj.paginator.count }} registros
+            {% else %}
+                Nenhum registro encontrado
+            {% endif %}
+        </div>
+        {% if page_obj.paginator.num_pages > 1 %}
+        <nav aria-label="Navegação da página">
+            <ul class="pagination pagination-sm mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.data_inicio %}&data_inicio={{ request.GET.data_inicio }}{% endif %}{% if request.GET.data_fim %}&data_fim={{ request.GET.data_fim }}{% endif %}{% if request.GET.operador %}&operador={{ request.GET.operador }}{% endif %}">
+                        <span class="material-symbols-outlined" style="font-size: 16px;">chevron_left</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% for number in page_obj.paginator.page_range %}
+                    {% if number == page_obj.number %}
+                    <li class="page-item active"><span class="page-link">{{ number }}</span></li>
+                    {% elif number > page_obj.number|add:'-3' and number < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ number }}{% if request.GET.data_inicio %}&data_inicio={{ request.GET.data_inicio }}{% endif %}{% if request.GET.data_fim %}&data_fim={{ request.GET.data_fim }}{% endif %}{% if request.GET.operador %}&operador={{ request.GET.operador }}{% endif %}">{{ number }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.data_inicio %}&data_inicio={{ request.GET.data_inicio }}{% endif %}{% if request.GET.data_fim %}&data_fim={{ request.GET.data_fim }}{% endif %}{% if request.GET.operador %}&operador={{ request.GET.operador }}{% endif %}">
+                        <span class="material-symbols-outlined" style="font-size: 16px;">chevron_right</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

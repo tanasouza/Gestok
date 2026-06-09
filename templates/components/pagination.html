@@ -1,0 +1,84 @@
+{% if page_obj and page_obj.paginator.num_pages > 1 %}
+<div class="gestok-pagination d-flex flex-column flex-sm-row align-items-center justify-content-between gap-3 mt-4">
+  <!-- Results count -->
+  <div class="pagination-info text-muted small">
+    {% with start=page_obj.start_index end=page_obj.end_index total=page_obj.paginator.count %}
+    Exibindo <strong>{{ start }}</strong>–<strong>{{ end }}</strong> de <strong>{{ total }}</strong> resultado{{ total|pluralize:"s" }}
+    {% endwith %}
+  </div>
+
+  <!-- Pagination controls -->
+  <nav aria-label="Navegação de páginas">
+    <ul class="pagination pagination-sm mb-0">
+      <!-- First page -->
+      {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.ordering %}&ordering={{ request.GET.ordering }}{% endif %}" aria-label="Primeira página" title="Primeira página">
+          <i class="bi bi-chevron-double-left"></i>
+        </a>
+      </li>
+      <!-- Previous page -->
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.ordering %}&ordering={{ request.GET.ordering }}{% endif %}" aria-label="Página anterior" title="Página anterior">
+          <i class="bi bi-chevron-left"></i>
+        </a>
+      </li>
+      {% else %}
+      <li class="page-item disabled">
+        <span class="page-link"><i class="bi bi-chevron-double-left"></i></span>
+      </li>
+      <li class="page-item disabled">
+        <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+      </li>
+      {% endif %}
+
+      <!-- Page numbers with ellipsis -->
+      {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+          <!-- Current page -->
+          <li class="page-item active" aria-current="page">
+            <span class="page-link">{{ num }}</span>
+          </li>
+        {% elif num == 1 or num == page_obj.paginator.num_pages %}
+          <!-- Always show first and last page -->
+          <li class="page-item">
+            <a class="page-link" href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.ordering %}&ordering={{ request.GET.ordering }}{% endif %}">{{ num }}</a>
+          </li>
+        {% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+          <!-- Pages within 2 of current -->
+          <li class="page-item">
+            <a class="page-link" href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.ordering %}&ordering={{ request.GET.ordering }}{% endif %}">{{ num }}</a>
+          </li>
+        {% elif num == page_obj.number|add:"-3" or num == page_obj.number|add:"3" %}
+          <!-- Ellipsis -->
+          <li class="page-item disabled">
+            <span class="page-link">&hellip;</span>
+          </li>
+        {% endif %}
+      {% endfor %}
+
+      <!-- Next page -->
+      {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.ordering %}&ordering={{ request.GET.ordering }}{% endif %}" aria-label="Próxima página" title="Próxima página">
+          <i class="bi bi-chevron-right"></i>
+        </a>
+      </li>
+      <!-- Last page -->
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.ordering %}&ordering={{ request.GET.ordering }}{% endif %}" aria-label="Última página" title="Última página">
+          <i class="bi bi-chevron-double-right"></i>
+        </a>
+      </li>
+      {% else %}
+      <li class="page-item disabled">
+        <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+      </li>
+      <li class="page-item disabled">
+        <span class="page-link"><i class="bi bi-chevron-double-right"></i></span>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+</div>
+{% endif %}

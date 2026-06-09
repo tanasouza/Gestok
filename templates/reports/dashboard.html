@@ -1,0 +1,756 @@
+{% extends 'base.html' %}
+{% load gestok_tags %}
+
+{% block title %}Dashboard | Gestok{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: #071426;
+    }
+    .gestok-main {
+        background:
+            linear-gradient(rgba(38, 69, 111, 0.08) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(38, 69, 111, 0.08) 1px, transparent 1px),
+            #071426;
+        background-size: 32px 32px;
+        --g-surface: #071426;
+        --g-surface-container: #10223a;
+        --g-surface-container-low: #0d1d32;
+        --g-surface-container-lowest: #11253e;
+        --g-surface-container-high: #19304d;
+        --g-on-surface: #eef5ff;
+        --g-on-surface-variant: #9db0c9;
+        --g-outline: #7185a1;
+        --g-outline-variant: #253b58;
+        --g-success: #22c58b;
+        --g-warning: #ffb224;
+        --g-error: #ff667a;
+        color: var(--g-on-surface);
+    }
+    .gestok-topbar,
+    .gestok-sidebar {
+        background-color: #081426;
+        border-color: #172b46;
+    }
+    .gestok-topbar {
+        box-shadow: 0 1px 0 #172b46;
+    }
+    .gestok-sidebar {
+        border-right: 1px solid #172b46;
+    }
+    .gestok-sidebar .sidebar-nav-link.active {
+        background: #173251;
+        color: #75aaff;
+    }
+    .page-header-title {
+        color: #f4f8ff;
+        font-size: 20px;
+        line-height: 28px;
+        font-weight: 600;
+    }
+    .page-header-subtitle {
+        color: #8195af;
+        font-size: 12px;
+        line-height: 18px;
+    }
+    .gestok-main .gestok-card {
+        background: linear-gradient(180deg, #152a45 0%, #10223a 100%);
+        border: 1px solid #263e5e;
+        box-shadow: 0 8px 22px rgba(1, 8, 20, 0.22);
+    }
+    .gestok-main .gestok-card.p-4 {
+        padding: 16px !important;
+    }
+    .row > div:nth-child(4n + 1) .dashboard-kpi-icon {
+        color: #65a3ff;
+        background: rgba(79, 140, 255, 0.13);
+        border-color: rgba(79, 140, 255, 0.34);
+    }
+    .row > div:nth-child(4n + 2) .dashboard-kpi-icon {
+        color: #a57aff;
+        background: rgba(139, 92, 246, 0.13);
+        border-color: rgba(139, 92, 246, 0.34);
+    }
+    .row > div:nth-child(4n + 3) .dashboard-kpi-icon {
+        color: #ffc14d;
+        background: rgba(255, 178, 36, 0.13);
+        border-color: rgba(255, 178, 36, 0.34);
+    }
+    .row > div:nth-child(4n + 4) .dashboard-kpi-icon {
+        color: #42d9aa;
+        background: rgba(34, 197, 139, 0.13);
+        border-color: rgba(34, 197, 139, 0.34);
+    }
+    .dashboard-tabs {
+        border-bottom: 1px solid #203754;
+        gap: 24px;
+        margin-bottom: 14px;
+    }
+    .dashboard-tabs .nav-link {
+        border: 0;
+        border-radius: 0;
+        padding: 0 0 10px;
+        color: #8095af;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        background: transparent;
+    }
+    .dashboard-tabs .nav-link.active {
+        color: #73a7ff;
+        border-bottom: 2px solid #4f8cff;
+    }
+    .dashboard-kpi {
+        min-height: 88px;
+        padding: 14px;
+    }
+    .dashboard-kpi-label,
+    .dashboard-section-label {
+        color: #9db0c9;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+    }
+    .dashboard-kpi-value {
+        margin: 6px 0 0;
+        color: #f4f8ff;
+        font-family: 'Inter', monospace;
+        font-size: 20px;
+        font-weight: 700;
+        line-height: 1.15;
+    }
+    .dashboard-kpi-note {
+        margin-top: 5px;
+        color: #22c58b;
+        font-size: 10px;
+        font-weight: 600;
+    }
+    .dashboard-kpi-note.danger {
+        color: var(--g-error);
+    }
+    .dashboard-kpi-icon {
+        width: 27px;
+        height: 27px;
+        border: 1px solid #345273;
+        border-radius: 6px;
+        color: #75aaff;
+        background: rgba(79, 140, 255, 0.1);
+        flex: 0 0 auto;
+    }
+    .dashboard-kpi-icon .material-symbols-outlined {
+        font-size: 16px;
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+    }
+    .dashboard-card-title {
+        margin: 0;
+        color: #f1f6ff;
+        font-size: 13px;
+        font-weight: 700;
+    }
+    .dashboard-chart {
+        position: relative;
+        width: 100%;
+        min-height: 250px;
+        height: 250px;
+    }
+    .dashboard-chart-sm {
+        position: relative;
+        width: 100%;
+        min-height: 210px;
+        height: 210px;
+    }
+    .dashboard-progress {
+        height: 6px;
+        border-radius: 999px;
+        background: #263b57;
+        overflow: hidden;
+    }
+    .dashboard-progress-bar {
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #4f8cff, #8b5cf6);
+    }
+    .dashboard-table th {
+        color: #8fa3bd;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        background: #0d1d32;
+        white-space: nowrap;
+    }
+    .dashboard-table td {
+        color: #dbe7f7;
+        font-size: 11px;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+    .dashboard-table > :not(caption) > * > * {
+        border-color: #243a57;
+        background-color: transparent;
+    }
+    .dashboard-table tbody tr:hover td {
+        background: rgba(79, 140, 255, 0.06);
+    }
+    .dashboard-table .badge-soft-success {
+        background: rgba(34, 197, 139, 0.14);
+        color: #54dca9;
+    }
+    .dashboard-table .badge-soft-warning {
+        background: rgba(255, 178, 36, 0.14);
+        color: #ffc45c;
+    }
+    .dashboard-table .badge-soft-danger {
+        background: rgba(255, 102, 122, 0.14);
+        color: #ff8292;
+    }
+    .dashboard-section-label,
+    .gestok-main .text-muted {
+        color: #8297b1 !important;
+    }
+    .dashboard-empty {
+        color: #7185a1;
+        font-size: 12px;
+        min-height: 120px;
+    }
+    @media (max-width: 767.98px) {
+        .dashboard-tabs {
+            gap: 18px;
+            overflow-x: auto;
+            flex-wrap: nowrap;
+        }
+        .dashboard-kpi-value {
+            font-size: 18px;
+        }
+        .dashboard-chart,
+        .dashboard-chart-sm {
+            min-height: 240px;
+            height: 240px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-heading mb-4">
+    <div class="page-heading-copy">
+        <h1 class="page-header-title mb-0">Dashboard</h1>
+        <p class="page-header-subtitle">Resumo visual da operação, vendas e estoque.</p>
+    </div>
+</div>
+
+<ul class="nav dashboard-tabs" id="dashboardTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="geral-tab" data-bs-toggle="tab" data-bs-target="#geral-pane" type="button" role="tab" aria-controls="geral-pane" aria-selected="true">Geral</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="vendas-tab" data-bs-toggle="tab" data-bs-target="#vendas-pane" type="button" role="tab" aria-controls="vendas-pane" aria-selected="false">Vendas</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="estoque-tab" data-bs-toggle="tab" data-bs-target="#estoque-pane" type="button" role="tab" aria-controls="estoque-pane" aria-selected="false">Estoque</button>
+    </li>
+</ul>
+
+<div class="tab-content" id="dashboardTabsContent">
+    <div class="tab-pane fade show active" id="geral-pane" role="tabpanel" aria-labelledby="geral-tab" tabindex="0">
+        <div class="row g-3 mb-3">
+            <div class="col-xl-3 col-md-6">
+                <div class="gestok-card dashboard-kpi h-100">
+                    <div class="d-flex justify-content-between gap-3">
+                        <span class="dashboard-kpi-label">Faturamento Hoje</span>
+                        <span class="dashboard-kpi-icon d-inline-flex align-items-center justify-content-center"><span class="material-symbols-outlined">payments</span></span>
+                    </div>
+                    <div class="dashboard-kpi-value">{{ faturamento_hoje|currency_brl }}</div>
+                    <div class="dashboard-kpi-note">{{ vendas_hoje_qtd }} venda{{ vendas_hoje_qtd|pluralize:"s" }} registrada{{ vendas_hoje_qtd|pluralize:"s" }}</div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="gestok-card dashboard-kpi h-100">
+                    <div class="d-flex justify-content-between gap-3">
+                        <span class="dashboard-kpi-label">Vendas do Mês</span>
+                        <span class="dashboard-kpi-icon d-inline-flex align-items-center justify-content-center"><span class="material-symbols-outlined">shopping_cart</span></span>
+                    </div>
+                    <div class="dashboard-kpi-value">{{ vendas_mes_qtd }}</div>
+                    <div class="dashboard-kpi-note">Ticket médio {{ ticket_medio_mes|currency_brl }}</div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="gestok-card dashboard-kpi h-100">
+                    <div class="d-flex justify-content-between gap-3">
+                        <span class="dashboard-kpi-label">Estoque Crítico</span>
+                        <span class="dashboard-kpi-icon d-inline-flex align-items-center justify-content-center"><span class="material-symbols-outlined">warning</span></span>
+                    </div>
+                    <div class="dashboard-kpi-value" style="color: {% if estoque_critico %}var(--g-error){% else %}var(--g-on-surface){% endif %};">{{ estoque_critico }}</div>
+                    <div class="dashboard-kpi-note {% if estoque_critico %}danger{% endif %}">{{ estoque_zerado }} produto{{ estoque_zerado|pluralize:"s" }} zerado{{ estoque_zerado|pluralize:"s" }}</div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="gestok-card dashboard-kpi h-100">
+                    <div class="d-flex justify-content-between gap-3">
+                        <span class="dashboard-kpi-label">Produtos Ativos</span>
+                        <span class="dashboard-kpi-icon d-inline-flex align-items-center justify-content-center"><span class="material-symbols-outlined">inventory_2</span></span>
+                    </div>
+                    <div class="dashboard-kpi-value">{{ total_produtos }}</div>
+                    <div class="dashboard-kpi-note">Valor em estoque {{ valor_estoque|currency_brl }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-xl-8">
+                <div class="gestok-card p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="dashboard-card-title">Evolução de Faturamento</h2>
+                        <span class="material-symbols-outlined text-muted" style="font-size: 18px;">more_vert</span>
+                    </div>
+                    <div class="dashboard-chart">
+                        <canvas id="generalRevenueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-4">
+                <div class="gestok-card p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="dashboard-card-title">Alertas de Estoque</h2>
+                        <span class="material-symbols-outlined text-muted" style="font-size: 18px;">more_vert</span>
+                    </div>
+                    <div class="dashboard-chart-sm">
+                        <canvas id="generalStockChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="gestok-card overflow-hidden">
+            <div class="p-4 pb-2">
+                <h2 class="dashboard-card-title">Últimas Transações</h2>
+            </div>
+            {% include 'reports/partials/_latest_sales_table.html' %}
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="vendas-pane" role="tabpanel" aria-labelledby="vendas-tab" tabindex="0">
+        <div class="row g-3 mb-3">
+            <div class="col-xl-3 col-md-6">
+                <div class="gestok-card dashboard-kpi h-100">
+                    <div class="d-flex justify-content-between gap-3">
+                        <span class="dashboard-kpi-label">Faturamento do Mês</span>
+                        <span class="dashboard-kpi-icon d-inline-flex align-items-center justify-content-center"><span class="material-symbols-outlined">monitoring</span></span>
+                    </div>
+                    <div class="dashboard-kpi-value">{{ faturamento_mes|currency_brl }}</div>
+                    <div class="dashboard-kpi-note">Período atual</div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="gestok-card dashboard-kpi h-100">
+                    <div class="d-flex justify-content-between gap-3">
+                        <span class="dashboard-kpi-label">Volume de Vendas</span>
+                        <span class="dashboard-kpi-icon d-inline-flex align-items-center justify-content-center"><span class="material-symbols-outlined">receipt_long</span></span>
+                    </div>
+                    <div class="dashboard-kpi-value">{{ vendas_mes_qtd }}</div>
+                    <div class="dashboard-kpi-note">{{ vendas_hoje_qtd }} hoje</div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="gestok-card dashboard-kpi h-100">
+                    <div class="d-flex justify-content-between gap-3">
+                        <span class="dashboard-kpi-label">Ticket Médio</span>
+                        <span class="dashboard-kpi-icon d-inline-flex align-items-center justify-content-center"><span class="material-symbols-outlined">point_of_sale</span></span>
+                    </div>
+                    <div class="dashboard-kpi-value">{{ ticket_medio_mes|currency_brl }}</div>
+                    <div class="dashboard-kpi-note">Média por venda</div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="gestok-card dashboard-kpi h-100">
+                    <div class="d-flex justify-content-between gap-3">
+                        <span class="dashboard-kpi-label">Margem de Lucro</span>
+                        <span class="dashboard-kpi-icon d-inline-flex align-items-center justify-content-center"><span class="material-symbols-outlined">percent</span></span>
+                    </div>
+                    <div class="dashboard-kpi-value">{{ margem_lucro_mes|floatformat:1 }}%</div>
+                    <div class="dashboard-kpi-note">Com base no custo cadastrado</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-xl-8">
+                <div class="gestok-card p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="dashboard-card-title">Evolução de Faturamento</h2>
+                        <span class="dashboard-section-label">Últimos 7 dias</span>
+                    </div>
+                    <div class="dashboard-chart">
+                        <canvas id="salesRevenueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-4">
+                <div class="gestok-card p-4 h-100">
+                    <h2 class="dashboard-card-title mb-3">Categorias Mais Vendidas</h2>
+                    <div class="d-flex flex-column gap-3">
+                        {% for categoria in categorias_vendas %}
+                        <div>
+                            <div class="d-flex justify-content-between mb-1" style="font-size: 12px;">
+                                <span style="color: var(--g-on-surface);">{{ categoria.nome }}</span>
+                                <strong>{{ categoria.percentual }}%</strong>
+                            </div>
+                            <div class="dashboard-progress"><div class="dashboard-progress-bar" style="width: {{ categoria.percentual }}%;"></div></div>
+                        </div>
+                        {% empty %}
+                        <div class="dashboard-empty d-flex align-items-center justify-content-center">Nenhuma categoria vendida no mês.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-xl-6">
+                <div class="gestok-card p-4 h-100">
+                    <h2 class="dashboard-card-title mb-3">Formas de Pagamento</h2>
+                    <div class="dashboard-chart-sm">
+                        <canvas id="salesPaymentsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-6">
+                <div class="gestok-card p-4 h-100">
+                    <h2 class="dashboard-card-title mb-3">Top Produtos Vendidos</h2>
+                    <div class="dashboard-chart-sm">
+                        <canvas id="salesProductsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="gestok-card overflow-hidden">
+            <div class="p-4 pb-2">
+                <h2 class="dashboard-card-title">Últimas Vendas</h2>
+            </div>
+            {% include 'reports/partials/_latest_sales_table.html' %}
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="estoque-pane" role="tabpanel" aria-labelledby="estoque-tab" tabindex="0">
+        <div class="row g-3 mb-3">
+            <div class="col-xl-3 col-md-6">
+                <div class="gestok-card dashboard-kpi h-100">
+                    <div class="d-flex justify-content-between gap-3">
+                        <span class="dashboard-kpi-label">Produtos Ativos</span>
+                        <span class="dashboard-kpi-icon d-inline-flex align-items-center justify-content-center"><span class="material-symbols-outlined">inventory_2</span></span>
+                    </div>
+                    <div class="dashboard-kpi-value">{{ total_produtos }}</div>
+                    <div class="dashboard-kpi-note">Catálogo disponível</div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="gestok-card dashboard-kpi h-100">
+                    <div class="d-flex justify-content-between gap-3">
+                        <span class="dashboard-kpi-label">Estoque Crítico</span>
+                        <span class="dashboard-kpi-icon d-inline-flex align-items-center justify-content-center"><span class="material-symbols-outlined">warning</span></span>
+                    </div>
+                    <div class="dashboard-kpi-value" style="color: {% if estoque_critico %}var(--g-error){% else %}var(--g-on-surface){% endif %};">{{ estoque_critico }}</div>
+                    <div class="dashboard-kpi-note {% if estoque_critico %}danger{% endif %}">Abaixo do mínimo</div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="gestok-card dashboard-kpi h-100">
+                    <div class="d-flex justify-content-between gap-3">
+                        <span class="dashboard-kpi-label">Estoque Zerado</span>
+                        <span class="dashboard-kpi-icon d-inline-flex align-items-center justify-content-center"><span class="material-symbols-outlined">remove_shopping_cart</span></span>
+                    </div>
+                    <div class="dashboard-kpi-value">{{ estoque_zerado }}</div>
+                    <div class="dashboard-kpi-note {% if estoque_zerado %}danger{% endif %}">Sem unidades disponíveis</div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="gestok-card dashboard-kpi h-100">
+                    <div class="d-flex justify-content-between gap-3">
+                        <span class="dashboard-kpi-label">Valor em Estoque</span>
+                        <span class="dashboard-kpi-icon d-inline-flex align-items-center justify-content-center"><span class="material-symbols-outlined">account_balance_wallet</span></span>
+                    </div>
+                    <div class="dashboard-kpi-value">{{ valor_estoque|currency_brl }}</div>
+                    <div class="dashboard-kpi-note">Custo dos itens ativos</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-xl-5">
+                <div class="gestok-card p-4 h-100">
+                    <h2 class="dashboard-card-title mb-3">Status do Estoque</h2>
+                    <div class="dashboard-chart">
+                        <canvas id="stockStatusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-7">
+                <div class="gestok-card p-4 h-100">
+                    <h2 class="dashboard-card-title mb-3">Produtos por Categoria</h2>
+                    <div class="dashboard-chart">
+                        <canvas id="stockCategoriesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-xl-5">
+                <div class="gestok-card p-4 h-100">
+                    <h2 class="dashboard-card-title mb-3">Top Categorias</h2>
+                    <div class="d-flex flex-column gap-3">
+                        {% for categoria in categorias_estoque %}
+                        <div>
+                            <div class="d-flex justify-content-between mb-1" style="font-size: 12px;">
+                                <span style="color: var(--g-on-surface);">{{ categoria.nome }}</span>
+                                <strong>{{ categoria.percentual }}%</strong>
+                            </div>
+                            <div class="dashboard-progress"><div class="dashboard-progress-bar" style="width: {{ categoria.percentual }}%;"></div></div>
+                        </div>
+                        {% empty %}
+                        <div class="dashboard-empty d-flex align-items-center justify-content-center">Nenhuma categoria cadastrada.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-7">
+                <div class="gestok-card overflow-hidden h-100">
+                    <div class="p-4 pb-2">
+                        <h2 class="dashboard-card-title">Produtos Críticos</h2>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table dashboard-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="px-4">Produto</th>
+                                    <th>Categoria</th>
+                                    <th class="text-center">Atual</th>
+                                    <th class="text-center">Mínimo</th>
+                                    <th class="text-end px-4">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for produto in produtos_criticos %}
+                                <tr>
+                                    <td class="px-4 fw-semibold">{{ produto.nome }}</td>
+                                    <td>{{ produto.categoria.nome }}</td>
+                                    <td class="text-center">{{ produto.estoque_atual }}</td>
+                                    <td class="text-center">{{ produto.estoque_minimo }}</td>
+                                    <td class="text-end px-4">
+                                        {% if produto.estoque_atual == 0 %}
+                                        <span class="badge badge-soft-danger px-3 py-2 rounded-pill">Zerado</span>
+                                        {% else %}
+                                        <span class="badge badge-soft-warning px-3 py-2 rounded-pill">Crítico</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5">
+                                        <div class="dashboard-empty d-flex align-items-center justify-content-center">Nenhum produto em estoque crítico.</div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.color = '#8fa3bd';
+    Chart.defaults.borderColor = 'rgba(89, 119, 154, 0.18)';
+
+    const charts = [];
+    const revenueLabels = JSON.parse('{{ chart_7d_labels|escapejs }}');
+    const revenueData = JSON.parse('{{ chart_7d_data|escapejs }}');
+    const paymentLabels = JSON.parse('{{ chart_pagamentos_labels|escapejs }}');
+    const paymentData = JSON.parse('{{ chart_pagamentos_data|escapejs }}');
+    const stockData = JSON.parse('{{ chart_estoque|escapejs }}');
+    const productLabels = JSON.parse('{{ chart_top_produtos_labels|escapejs }}');
+    const productData = JSON.parse('{{ chart_top_produtos_data|escapejs }}');
+    const categoryStockLabels = JSON.parse('{{ chart_categorias_estoque_labels|escapejs }}');
+    const categoryStockData = JSON.parse('{{ chart_categorias_estoque_data|escapejs }}');
+
+    const colors = {
+        ink: '#4f8cff',
+        purple: '#8b5cf6',
+        muted: '#294666',
+        grid: 'rgba(98, 128, 164, 0.16)',
+        success: '#22c58b',
+        warning: '#ffb224',
+        danger: '#ff667a',
+        slate: '#607896'
+    };
+
+    const money = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+
+    function makeChart(id, config) {
+        const canvas = document.getElementById(id);
+        if (!canvas) return null;
+        const chart = new Chart(canvas, config);
+        charts.push(chart);
+        return chart;
+    }
+
+    function revenueChart(id) {
+        return makeChart(id, {
+            type: 'bar',
+            data: {
+                labels: revenueLabels,
+                datasets: [{
+                    data: revenueData,
+                    backgroundColor: revenueData.map((_, index) => index === revenueData.length - 1 ? colors.purple : colors.ink),
+                    borderRadius: 4,
+                    barPercentage: 0.62,
+                    categoryPercentage: 0.72
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: (context) => money(context.parsed.y) } }
+                },
+                scales: {
+                    x: {
+                        grid: { color: colors.grid, drawTicks: false },
+                        ticks: { font: { size: 11 } }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: colors.grid, drawTicks: false },
+                        ticks: {
+                            font: { size: 11 },
+                            callback: (value) => value >= 1000 ? `${value / 1000}k` : value
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    revenueChart('generalRevenueChart');
+    revenueChart('salesRevenueChart');
+
+    makeChart('generalStockChart', {
+        type: 'doughnut',
+        data: {
+            labels: ['Normal', 'Crítico', 'Zerado'],
+            datasets: [{
+                data: stockData,
+                backgroundColor: [colors.success, colors.warning, colors.danger],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '68%',
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } } }
+        }
+    });
+
+    makeChart('salesPaymentsChart', {
+        type: 'doughnut',
+        data: {
+            labels: paymentLabels,
+            datasets: [{
+                data: paymentData,
+                backgroundColor: [colors.ink, colors.purple, colors.success],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '68%',
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } },
+                tooltip: { callbacks: { label: (context) => `${context.label}: ${money(context.parsed)}` } }
+            }
+        }
+    });
+
+    makeChart('salesProductsChart', {
+        type: 'bar',
+        data: {
+            labels: productLabels,
+            datasets: [{
+                data: productData,
+                backgroundColor: colors.purple,
+                borderRadius: 4,
+                barPercentage: 0.55
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { beginAtZero: true, grid: { color: colors.grid } },
+                y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+            }
+        }
+    });
+
+    makeChart('stockStatusChart', {
+        type: 'doughnut',
+        data: {
+            labels: ['Normal', 'Crítico', 'Zerado'],
+            datasets: [{
+                data: stockData,
+                backgroundColor: [colors.success, colors.warning, colors.danger],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '66%',
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } } }
+        }
+    });
+
+    makeChart('stockCategoriesChart', {
+        type: 'bar',
+        data: {
+            labels: categoryStockLabels,
+            datasets: [{
+                data: categoryStockData,
+                backgroundColor: colors.success,
+                borderRadius: 4,
+                barPercentage: 0.55
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+                y: { beginAtZero: true, grid: { color: colors.grid }, ticks: { precision: 0 } }
+            }
+        }
+    });
+
+    document.querySelectorAll('[data-bs-toggle="tab"]').forEach((tab) => {
+        tab.addEventListener('shown.bs.tab', () => {
+            charts.forEach((chart) => chart.resize());
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block title %}Movimentações de Estoque | Gestok{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-heading mb-4">
+    <div class="page-heading-row">
+        <div class="page-heading-copy">
+            <h1 class="page-header-title mb-0">Movimentações de Estoque</h1>
+            <p class="page-header-subtitle">Acompanhe todas as entradas, saídas e ajustes manuais registrados no inventário da sua operação.</p>
+        </div>
+        <a
+            href="{% url 'products:movement_pdf' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}"
+            class="btn btn-primary page-heading-action d-flex align-items-center gap-2"
+        >
+            <span class="material-symbols-outlined" style="font-size: 18px;">picture_as_pdf</span>
+            Exportar PDF
+        </a>
+    </div>
+</div>
+
+<!-- Filters Card -->
+<div class="gestok-card mb-4 p-4">
+    <form method="get" class="gestok-filter-form filter-5">
+        <div class="gestok-filter-field">
+            <label for="search" class="form-label-sm d-block mb-2">Buscar Produto</label>
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0 text-muted" style="border-color: var(--g-outline-variant);">
+                    <span class="material-symbols-outlined" style="font-size: 20px;">search</span>
+                </span>
+                <input type="text" name="search" id="search" class="form-control border-start-0 ps-0" placeholder="Nome ou código SKU" value="{{ request.GET.search }}" style="border-color: var(--g-outline-variant); box-shadow: none;">
+            </div>
+        </div>
+        <div class="gestok-filter-field">
+            <label for="tipo" class="form-label-sm d-block mb-2">Tipo de Movimentação</label>
+            <select name="tipo" id="tipo" class="form-select" style="border-color: var(--g-outline-variant); box-shadow: none;">
+                <option value="">Todos os tipos</option>
+                <option value="ENTRADA" {% if request.GET.tipo == 'ENTRADA' %}selected{% endif %}>Entrada</option>
+                <option value="VENDA" {% if request.GET.tipo == 'VENDA' %}selected{% endif %}>Saída (Venda)</option>
+                <option value="ESTORNO" {% if request.GET.tipo == 'ESTORNO' %}selected{% endif %}>Estorno</option>
+                <option value="AJUSTE" {% if request.GET.tipo == 'AJUSTE' %}selected{% endif %}>Ajuste</option>
+            </select>
+        </div>
+        <div class="gestok-filter-field">
+            <label for="data_inicio" class="form-label-sm d-block mb-2">Data Inicial</label>
+            <input type="date" name="data_inicio" id="data_inicio" class="form-control" value="{{ data_inicio }}" style="border-color: var(--g-outline-variant); box-shadow: none;">
+        </div>
+
+        <div class="gestok-filter-field">
+            <label for="data_fim" class="form-label-sm d-block mb-2">Data Final</label>
+            <input type="date" name="data_fim" id="data_fim" class="form-control" value="{{ data_fim }}" style="border-color: var(--g-outline-variant); box-shadow: none;">
+        </div>
+
+        <div class="gestok-filter-field d-flex justify-content-end">
+            <button type="submit" class="btn btn-light border px-3 d-flex align-items-center justify-content-center gap-2 gestok-filter-action">
+                <span class="material-symbols-outlined" style="font-size: 18px;">filter_list</span> Filtrar
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Table Card -->
+<div class="gestok-card overflow-hidden">
+    <div class="table-responsive border-0 mb-0">
+        <table class="table gestok-table mb-0">
+            <thead>
+                <tr>
+                    <th class="px-4">Código Mov.</th>
+                    <th>Data/Hora</th>
+                    <th>Produto</th>
+                    <th>Tipo</th>
+                    <th class="text-center">Qtd.</th>
+                    <th class="text-center">Estoque Ant.</th>
+                    <th class="text-center">Estoque Post.</th>
+                </tr>
+            </thead>
+            <tbody class="border-top-0">
+                {% for mov in object_list %}
+                <tr>
+                    <td class="px-4"><span style="font-weight: 600; color: var(--g-on-surface);">{{ mov.codigo_movimentacao }}</span></td>
+                    <td style="color: var(--g-on-surface-variant);">{{ mov.criado_em|date:"d M Y, H:i" }}</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background-color: var(--g-surface-container-high); color: var(--g-on-surface-variant);">
+                                <span class="material-symbols-outlined" style="font-size: 20px;">inventory_2</span>
+                            </div>
+                            <div>
+                                <div style="font-weight: 600; color: var(--g-on-surface);">{{ mov.produto.nome }}</div>
+                                <div style="font-size: 12px; color: var(--g-outline);">SKU: {{ mov.produto.codigo_produto }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if mov.tipo == 'ENTRADA' %}
+                            <span class="badge badge-soft-primary px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"><span class="material-symbols-outlined" style="font-size: 14px;">arrow_downward</span> Entrada</span>
+                        {% elif mov.tipo == 'VENDA' %}
+                            <span class="badge badge-soft-secondary px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"><span class="material-symbols-outlined" style="font-size: 14px;">arrow_upward</span> Saída (Venda)</span>
+                        {% elif mov.tipo == 'ESTORNO' %}
+                            <span class="badge badge-soft-danger px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"><span class="material-symbols-outlined" style="font-size: 14px;">undo</span> Estorno</span>
+                        {% elif mov.tipo == 'AJUSTE' %}
+                            <span class="badge badge-soft-secondary px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"><span class="material-symbols-outlined" style="font-size: 14px;">sync</span> Ajuste</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center" style="font-family: 'Inter', monospace; font-weight: 700; color: {% if mov.quantidade > 0 %}var(--g-primary){% else %}var(--g-on-surface){% endif %};">
+                        {% if mov.quantidade > 0 %}+{{ mov.quantidade }}{% else %}{{ mov.quantidade }}{% endif %}
+                    </td>
+                    <td class="text-center" style="font-family: 'Inter', monospace; color: var(--g-on-surface-variant);">{{ mov.estoque_anterior }}</td>
+                    <td class="text-center" style="font-family: 'Inter', monospace; font-weight: 600; color: var(--g-on-surface);">{{ mov.estoque_posterior }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center py-5" style="color: rgba(69,70,77,0.4);">
+                        <span class="material-symbols-outlined d-block mb-3" style="font-size: 48px; opacity: 0.5;">receipt_long</span>
+                        Nenhuma movimentação encontrada.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Footer/Pagination -->
+    <div class="bg-white border-top py-3 px-4 d-flex align-items-center justify-content-between" style="border-color: var(--g-outline-variant) !important;">
+        <div style="font-size: 12px; font-weight: 500; color: var(--g-on-surface-variant);">
+            {% if page_obj.paginator.count > 0 %}
+                Mostrando {{ page_obj.start_index }} a {{ page_obj.end_index }} de {{ page_obj.paginator.count }} registros
+            {% else %}
+                Nenhum registro encontrado
+            {% endif %}
+        </div>
+
+        {% if page_obj %}
+        <nav aria-label="Navegação da página">
+            <ul class="pagination pagination-sm mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link text-dark border-light" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.data_inicio %}&data_inicio={{ request.GET.data_inicio }}{% endif %}{% if request.GET.data_fim %}&data_fim={{ request.GET.data_fim }}{% endif %}"><span class="material-symbols-outlined" style="font-size: 16px;">chevron_left</span></a></li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link bg-dark border-dark text-white">{{ num }}</span></li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item"><a class="page-link text-dark border-light" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.data_inicio %}&data_inicio={{ request.GET.data_inicio }}{% endif %}{% if request.GET.data_fim %}&data_fim={{ request.GET.data_fim }}{% endif %}">{{ num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link text-dark border-light" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.data_inicio %}&data_inicio={{ request.GET.data_inicio }}{% endif %}{% if request.GET.data_fim %}&data_fim={{ request.GET.data_fim }}{% endif %}"><span class="material-symbols-outlined" style="font-size: 16px;">chevron_right</span></a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

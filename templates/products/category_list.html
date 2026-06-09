@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Categorias | Gestok{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0 text-gray-800"><i class="bi bi-tags text-primary me-2"></i>Categorias</h1>
+    <a href="{% url 'products:category_create' %}" class="btn btn-primary shadow-sm">
+        <i class="bi bi-plus-lg"></i> Nova Categoria
+    </a>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-light">
+        <form method="get" class="d-flex w-50">
+            <input type="text" name="search" class="form-control form-control-sm me-2" placeholder="Buscar categoria..." value="{{ request.GET.search }}">
+            <button class="btn btn-sm btn-outline-secondary" type="submit">Filtrar</button>
+        </form>
+    </div>
+
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Nome</th>
+                        <th>Descrição</th>
+                        <th>Status</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cat in object_list %}
+                    <tr>
+                        <td class="fw-bold">{{ cat.nome }}</td>
+                        <td>{{ cat.descricao|default:"-" }}</td>
+                        <td>
+                            {% if cat.ativo %}
+                                <span class="badge bg-success"><i class="bi bi-check me-1"></i>ATIVO</span>
+                            {% else %}
+                                <span class="badge bg-secondary"><i class="bi bi-dash-circle me-1"></i>INATIVO</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'products:category_update' cat.pk %}" class="btn btn-sm btn-outline-primary" aria-label="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                            Nenhuma categoria cadastrada.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% include 'components/pagination.html' %}
+    </div>
+</div>
+{% endblock %}

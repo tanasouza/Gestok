@@ -1,0 +1,95 @@
+<form id="productForm" method="post" action="{{ request.path }}?partial=true" novalidate class="d-flex flex-column h-100 m-0">
+    {% csrf_token %}
+
+    <div class="offcanvas-header border-bottom py-3">
+        <div>
+            <h5 class="offcanvas-title fw-bold" style="font-size: 16px; color: var(--g-on-surface);">{% if object %}Editar Produto{% else %}Novo Produto{% endif %}</h5>
+            {% if object %}
+            <span style="font-size: 11px; color: var(--g-on-surface-variant); text-transform: uppercase; letter-spacing: 0.05em;">#{{ object.codigo_produto }}</span>
+            {% endif %}
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+
+    <div class="offcanvas-body overflow-auto p-4" style="background-color: var(--g-surface);">
+
+        <div class="mb-4">
+            <h6 class="mb-3 border-bottom pb-2" style="font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--g-on-surface-variant);">Informações Gerais</h6>
+
+            <div class="mb-3">
+                <label for="{{ form.nome.id_for_label }}" class="form-label-sm d-block mb-1">Nome do Produto *</label>
+                {{ form.nome }}
+                {% if form.nome.errors %}
+                    <div class="invalid-feedback d-block" style="font-size: 11px;">{{ form.nome.errors|striptags }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.categoria.id_for_label }}" class="form-label-sm d-block mb-1">Categoria</label>
+                {{ form.categoria }}
+                {% if form.categoria.errors %}
+                    <div class="invalid-feedback d-block" style="font-size: 11px;">{{ form.categoria.errors|striptags }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.descricao.id_for_label }}" class="form-label-sm d-block mb-1">Descrição</label>
+                {{ form.descricao }}
+                {% if form.descricao.errors %}
+                    <div class="invalid-feedback d-block" style="font-size: 11px;">{{ form.descricao.errors|striptags }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <h6 class="mb-3 border-bottom pb-2 mt-4" style="font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--g-on-surface-variant);">Preços e Estoque</h6>
+
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <label for="{{ form.preco_custo.id_for_label }}" class="form-label-sm d-block mb-1">Custo (R$)</label>
+                    {{ form.preco_custo }}
+                    {% if form.preco_custo.errors %}
+                        <div class="invalid-feedback d-block" style="font-size: 11px;">{{ form.preco_custo.errors|striptags }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-6">
+                    <label for="{{ form.preco_venda.id_for_label }}" class="form-label-sm d-block mb-1">Venda (R$) *</label>
+                    {{ form.preco_venda }}
+                    {% if form.preco_venda.errors %}
+                        <div class="invalid-feedback d-block" style="font-size: 11px;">{{ form.preco_venda.errors|striptags }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <label for="{{ form.estoque_atual.id_for_label }}" class="form-label-sm d-block mb-1">Estoque Atual</label>
+                    {{ form.estoque_atual }}
+                    {% if form.estoque_atual.errors %}
+                        <div class="invalid-feedback d-block" style="font-size: 11px;">{{ form.estoque_atual.errors|striptags }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-6">
+                    <label for="{{ form.estoque_minimo.id_for_label }}" class="form-label-sm d-block mb-1">Estoque Mín.</label>
+                    {{ form.estoque_minimo }}
+                    {% if form.estoque_minimo.errors %}
+                        <div class="invalid-feedback d-block" style="font-size: 11px;">{{ form.estoque_minimo.errors|striptags }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-switch mt-4 d-flex align-items-center justify-content-start gap-2">
+                {{ form.ativo }}
+                <label class="form-check-label fw-bold mb-0" for="{{ form.ativo.id_for_label }}" style="font-size: 13px;">Produto Ativo no Sistema</label>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="offcanvas-footer border-top p-3 bg-white d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-light fw-semibold" style="font-size: 13px;" data-bs-dismiss="offcanvas">Cancelar</button>
+        <button type="submit" class="btn btn-primary px-4 fw-semibold d-flex align-items-center gap-2" style="font-size: 13px;">
+            <span class="material-symbols-outlined" style="font-size: 18px;">save</span> Salvar Produto
+        </button>
+    </div>
+</form>

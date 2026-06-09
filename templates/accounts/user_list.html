@@ -1,0 +1,270 @@
+{% extends 'base.html' %}
+{% load gestok_tags %}
+
+{% block title %}Usuários{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-heading mb-4">
+    <div class="page-heading-row">
+        <div class="page-heading-copy">
+            <h1 class="page-header-title mb-0">Gerenciamento de Usuários</h1>
+            <p class="page-header-subtitle">Administre os acessos e permissões da equipe no sistema Gestok.</p>
+        </div>
+        <a href="{% url 'accounts:user_create' %}" class="btn btn-dark d-flex align-items-center gap-2 px-4 py-2 rounded-3 shadow-sm btn-user-panel page-heading-action" style="font-size: 14px; font-weight: 600;">
+            <span class="material-symbols-outlined" style="font-size: 20px;">person_add</span> Cadastrar Usuário
+        </a>
+    </div>
+</div>
+
+<!-- Filters Card -->
+<div class="gestok-card mb-4 p-4">
+    <form method="get" class="gestok-filter-form filter-4">
+        <div class="gestok-filter-field">
+            <label for="search" class="form-label-sm d-block mb-2">Buscar Usuário</label>
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0 text-muted" style="border-color: var(--g-outline-variant);">
+                    <span class="material-symbols-outlined" style="font-size: 20px;">search</span>
+                </span>
+                <input type="text" name="search" id="search" class="form-control border-start-0 ps-0" placeholder="Nome, matrícula ou cargo..." value="{{ search }}" style="border-color: var(--g-outline-variant); box-shadow: none;">
+            </div>
+        </div>
+        <div class="gestok-filter-field">
+            <label for="cargo" class="form-label-sm d-block mb-2">Cargo Operacional</label>
+            <select name="cargo" id="cargo" class="form-select" style="border-color: var(--g-outline-variant); box-shadow: none;">
+                <option value="">Todos os cargos</option>
+                {% for val, label in cargo_choices %}
+                    <option value="{{ val }}" {% if cargo_filter == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="gestok-filter-field">
+            <label for="status" class="form-label-sm d-block mb-2">Status</label>
+            <select name="status" id="status" class="form-select" style="border-color: var(--g-outline-variant); box-shadow: none;">
+                <option value="">Todos</option>
+                <option value="ativo" {% if status_filter == 'ativo' %}selected{% endif %}>Ativos</option>
+                <option value="inativo" {% if status_filter == 'inativo' %}selected{% endif %}>Inativos</option>
+            </select>
+        </div>
+
+        <div class="gestok-filter-field d-flex justify-content-end">
+            <button type="submit" class="btn btn-light border px-3 d-flex align-items-center justify-content-center gap-2 gestok-filter-action">
+                <span class="material-symbols-outlined" style="font-size: 18px;">filter_list</span> Filtrar
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Table Card -->
+<div class="gestok-card overflow-hidden">
+    <div class="table-responsive border-0 mb-0">
+        <table class="table gestok-table mb-0">
+            <thead>
+                <tr>
+                    <th class="px-4">Usuário</th>
+                    <th>Contato</th>
+                    <th>Cargo Operacional</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-end px-4">Ações</th>
+                </tr>
+            </thead>
+            <tbody class="border-top-0">
+                {% for u in users %}
+                <tr>
+                    <td class="px-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded d-flex align-items-center justify-content-center fw-bold text-uppercase" style="width: 40px; height: 40px; background-color: var(--g-surface-container-high); color: var(--g-on-surface-variant);">
+                                {{ u.get_short_name|slice:":2" }}
+                            </div>
+                            <div>
+                                <div style="font-weight: 600; color: var(--g-on-surface);">{{ u.nome_completo }}</div>
+                                <div style="font-size: 12px; color: var(--g-outline);">Matrícula: #{{ u.matricula }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="color: var(--g-on-surface-variant);">{{ u.email|default:"-" }}</td>
+                    <td style="font-weight: 600; color: var(--g-on-surface);">{{ u.get_cargo_display }}</td>
+                    <td class="text-center">
+                        {% if u.ativo %}
+                            <span class="badge badge-soft-success px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"><span class="material-symbols-outlined" style="font-size: 14px;">check</span> Ativo</span>
+                        {% else %}
+                            <span class="badge badge-soft-secondary px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"><span class="material-symbols-outlined" style="font-size: 14px;">do_not_disturb_on</span> Inativo</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end px-4">
+                        <div class="d-inline-flex gap-2">
+                            <a href="{% url 'accounts:user_detail' u.pk %}" class="btn btn-sm btn-light border text-muted d-inline-flex align-items-center justify-content-center btn-user-panel" style="width: 32px; height: 32px; border-color: var(--g-outline-variant) !important;" title="Visualizar Usuário" aria-label="Visualizar Usuário">
+                                <span class="material-symbols-outlined" style="font-size: 18px;">visibility</span>
+                            </a>
+                            <a href="{% url 'accounts:user_edit' u.pk %}" class="btn btn-sm btn-light border text-muted d-inline-flex align-items-center justify-content-center btn-user-panel" style="width: 32px; height: 32px; border-color: var(--g-outline-variant) !important;" title="Editar Usuário" aria-label="Editar">
+                                <span class="material-symbols-outlined" style="font-size: 18px;">edit</span>
+                            </a>
+
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center py-5" style="color: rgba(69,70,77,0.4);">
+                        <span class="material-symbols-outlined d-block mb-3" style="font-size: 48px; opacity: 0.5;">groups</span>
+                        Nenhum usuário encontrado.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Footer/Pagination -->
+    <div class="bg-white border-top py-3 px-4 d-flex align-items-center justify-content-between" style="border-color: var(--g-outline-variant) !important;">
+        <div style="font-size: 12px; font-weight: 500; color: var(--g-on-surface-variant);">
+            {% if page_obj.paginator.count > 0 %}
+                Mostrando {{ page_obj.start_index }} a {{ page_obj.end_index }} de {{ page_obj.paginator.count }} registros
+            {% else %}
+                Nenhum registro encontrado
+            {% endif %}
+        </div>
+
+        {% if page_obj %}
+        <nav aria-label="Navegação da página">
+            <ul class="pagination pagination-sm mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link text-dark border-light" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.cargo %}&cargo={{ request.GET.cargo }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}"><span class="material-symbols-outlined" style="font-size: 16px;">chevron_left</span></a></li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link bg-dark border-dark text-white">{{ num }}</span></li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item"><a class="page-link text-dark border-light" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.cargo %}&cargo={{ request.GET.cargo }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">{{ num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link text-dark border-light" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.cargo %}&cargo={{ request.GET.cargo }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}"><span class="material-symbols-outlined" style="font-size: 16px;">chevron_right</span></a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+<div class="offcanvas offcanvas-end shadow-sm" tabindex="-1" id="offcanvasUser" aria-labelledby="offcanvasUserLabel" style="width: 440px; max-width: 100vw; border-left: none;">
+    <div id="offcanvasUserContent" class="d-flex flex-column h-100">
+        <div class="d-flex justify-content-center align-items-center h-100">
+            <div class="spinner-border text-dark" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const offcanvasEl = document.getElementById('offcanvasUser');
+    const offcanvasContent = document.getElementById('offcanvasUserContent');
+    const offcanvasInstance = new bootstrap.Offcanvas(offcanvasEl);
+
+    const loaderHtml = `
+        <div class="d-flex justify-content-center align-items-center h-100">
+            <div class="spinner-border text-dark" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+        </div>
+    `;
+
+    const errorHtml = `
+        <div class="p-4 text-center text-danger">
+            <span class="material-symbols-outlined mb-2" style="font-size: 48px;">error</span>
+            <p>Não foi possível carregar os dados do usuário.</p>
+        </div>
+    `;
+
+    function partialUrl(url) {
+        return url + (url.includes('?') ? '&' : '?') + 'partial=true';
+    }
+
+    function bindUserForm() {
+        const form = offcanvasContent.querySelector('#userForm');
+        if (!form) return;
+
+        const noNumber = form.querySelector('#id_sem_numero');
+        const number = form.querySelector('#id_numero');
+        if (noNumber && number) {
+            const syncNumberField = function() {
+                number.disabled = noNumber.checked;
+                if (noNumber.checked) number.value = '';
+            };
+            noNumber.addEventListener('change', syncNumberField);
+            syncNumberField();
+        }
+
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const submitButton = form.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.innerHTML = `
+                    <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                    Salvando...
+                `;
+            }
+
+            fetch(form.action, {
+                method: 'POST',
+                headers: {'X-Requested-With': 'XMLHttpRequest'},
+                body: new FormData(form)
+            })
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                    return null;
+                }
+                if (!response.ok) throw new Error('Falha ao salvar o usuário');
+                return response.text();
+            })
+            .then(html => {
+                if (!html) return;
+                offcanvasContent.innerHTML = html;
+                bindUserForm();
+            })
+            .catch(error => {
+                console.error('Error saving user:', error);
+                offcanvasContent.innerHTML = errorHtml;
+            });
+        });
+    }
+
+    function loadUserPanel(url, showPanel) {
+        offcanvasContent.innerHTML = loaderHtml;
+        if (showPanel) offcanvasInstance.show();
+
+        fetch(partialUrl(url), {
+            headers: {'X-Requested-With': 'XMLHttpRequest'}
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Falha ao carregar o painel');
+            return response.text();
+        })
+        .then(html => {
+            offcanvasContent.innerHTML = html;
+            bindUserForm();
+        })
+        .catch(error => {
+            console.error('Error fetching user panel:', error);
+            offcanvasContent.innerHTML = errorHtml;
+        });
+    }
+
+    document.addEventListener('click', function(event) {
+        const trigger = event.target.closest('.btn-user-panel');
+        if (!trigger) return;
+
+        event.preventDefault();
+        loadUserPanel(trigger.href, !offcanvasEl.classList.contains('show'));
+    });
+});
+</script>
+{% endblock %}

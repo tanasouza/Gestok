@@ -1,0 +1,136 @@
+<form id="userForm" method="post" action="{{ request.path }}?partial=true" novalidate class="user-form d-flex flex-column h-100 m-0">
+    {% csrf_token %}
+
+    <div class="offcanvas-header border-bottom py-3">
+        <div>
+            <h5 class="offcanvas-title fw-bold" style="font-size: 16px; color: var(--g-on-surface);">
+                {% if object %}Editar Usuário{% else %}Novo Usuário{% endif %}
+            </h5>
+            {% if object %}
+            <span style="font-size: 11px; color: var(--g-on-surface-variant); text-transform: uppercase;">Matrícula #{{ object.matricula }}</span>
+            {% endif %}
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+    </div>
+
+    <div class="offcanvas-body overflow-auto p-4" style="background-color: var(--g-surface);">
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger py-2">
+            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+        </div>
+        {% endif %}
+
+        <section class="mb-4">
+            <h6 class="mb-3 border-bottom pb-2" style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--g-on-surface-variant);">
+                Informações pessoais
+            </h6>
+
+            <div class="mb-3">
+                <label for="{{ form.nome_completo.id_for_label }}" class="form-label-sm d-block mb-1">Nome completo *</label>
+                {{ form.nome_completo }}
+                {% if form.nome_completo.errors %}
+                <div class="invalid-feedback d-block" style="font-size: 11px;">{{ form.nome_completo.errors|striptags }}</div>
+                {% endif %}
+            </div>
+
+            <div class="row g-2 mb-3">
+                <div class="col-12 col-sm-6">
+                    <label for="{{ form.email.id_for_label }}" class="form-label-sm d-block mb-1">E-mail</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                    <div class="invalid-feedback d-block" style="font-size: 11px;">{{ form.email.errors|striptags }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-12 col-sm-6">
+                    <label for="{{ form.telefone.id_for_label }}" class="form-label-sm d-block mb-1">Telefone</label>
+                    {{ form.telefone }}
+                    {% if form.telefone.errors %}
+                    <div class="invalid-feedback d-block" style="font-size: 11px;">{{ form.telefone.errors|striptags }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <h6 class="mb-3 border-bottom pb-2 mt-4" style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--g-on-surface-variant);">
+                Endereço
+            </h6>
+
+            <div class="row g-2 mb-3">
+                <div class="col-12 col-sm-5">
+                    <label for="{{ form.cep.id_for_label }}" class="form-label-sm d-block mb-1">CEP</label>
+                    {{ form.cep }}
+                    {% if form.cep.errors %}
+                    <div class="invalid-feedback d-block" style="font-size: 11px;">{{ form.cep.errors|striptags }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-12 col-sm-7">
+                    <label for="{{ form.setor.id_for_label }}" class="form-label-sm d-block mb-1">Setor ou bairro</label>
+                    {{ form.setor }}
+                    {% if form.setor.errors %}
+                    <div class="invalid-feedback d-block" style="font-size: 11px;">{{ form.setor.errors|striptags }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="row g-2 mb-2">
+                <div class="col-12 col-sm-8">
+                    <label for="{{ form.rua.id_for_label }}" class="form-label-sm d-block mb-1">Nome da rua</label>
+                    {{ form.rua }}
+                    {% if form.rua.errors %}
+                    <div class="invalid-feedback d-block" style="font-size: 11px;">{{ form.rua.errors|striptags }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-12 col-sm-4">
+                    <label for="{{ form.numero.id_for_label }}" class="form-label-sm d-block mb-1">Número</label>
+                    {{ form.numero }}
+                    {% if form.numero.errors %}
+                    <div class="invalid-feedback d-block" style="font-size: 11px;">{{ form.numero.errors|striptags }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-check d-flex align-items-center gap-2 mb-1">
+                {{ form.sem_numero }}
+                <label class="form-check-label mb-0" for="{{ form.sem_numero.id_for_label }}">Imóvel sem número</label>
+            </div>
+        </section>
+
+        <section>
+            <h6 class="mb-3 border-bottom pb-2" style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--g-on-surface-variant);">
+                Acesso ao sistema
+            </h6>
+
+            <div class="mb-3">
+                <label for="{{ form.cargo.id_for_label }}" class="form-label-sm d-block mb-1">Cargo operacional *</label>
+                {{ form.cargo }}
+                {% if form.cargo.errors %}
+                <div class="invalid-feedback d-block" style="font-size: 11px;">{{ form.cargo.errors|striptags }}</div>
+                {% endif %}
+                <small class="d-block mt-1" style="color: var(--g-on-surface-variant);">As permissões são definidas automaticamente pelo cargo selecionado.</small>
+            </div>
+
+            {% if is_edit and form.ativo %}
+            <div class="form-switch mt-4 d-flex align-items-center justify-content-start gap-2">
+                {{ form.ativo }}
+                <label class="form-check-label fw-bold mb-0" for="{{ form.ativo.id_for_label }}" style="font-size: 13px;">
+                    Usuário ativo no sistema
+                </label>
+            </div>
+            <small class="d-block mt-1" style="color: var(--g-on-surface-variant);">Usuários inativos não podem acessar o sistema.</small>
+            {% endif %}
+
+            {% if not object %}
+            <div class="mt-4 p-3 rounded" style="background-color: var(--g-surface-container); color: var(--g-on-surface-variant); font-size: 12px;">
+                A matrícula será gerada automaticamente. A senha inicial será <strong>senha123</strong>.
+            </div>
+            {% endif %}
+        </section>
+    </div>
+
+    <div class="offcanvas-footer border-top p-3 bg-white d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-light fw-semibold" style="font-size: 13px;" data-bs-dismiss="offcanvas">Cancelar</button>
+        <button type="submit" class="btn btn-primary px-4 fw-semibold d-flex align-items-center gap-2" style="font-size: 13px;">
+            <span class="material-symbols-outlined" style="font-size: 18px;">save</span>
+            Salvar Usuário
+        </button>
+    </div>
+</form>

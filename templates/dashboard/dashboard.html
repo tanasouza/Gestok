@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% load gestok_tags %}
+
+{% block title %}Dashboard | Gestok{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-heading mb-4">
+    <div class="page-heading-copy">
+        <h1 class="page-header-title mb-0">Painel Geral</h1>
+        <p class="page-header-subtitle">Bem-vindo, {{ request.user.nome_completo|default:request.user.username }}. Aqui está o resumo da sua operação.</p>
+    </div>
+</div>
+
+<!-- KPIs (4 columns) -->
+<div class="row g-3 mb-4">
+    <!-- Total Produtos -->
+    <div class="col-md-3">
+        <div class="gestok-card p-3 d-flex align-items-center gap-3 h-100">
+            <div class="rounded d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background-color: rgba(69,70,77,0.1); color: var(--g-on-surface-variant);">
+                <span class="material-symbols-outlined" style="font-size: 24px;">inventory_2</span>
+            </div>
+            <div>
+                <p class="mb-0" style="font-size: 13px; font-weight: 500; color: var(--g-on-surface-variant);">Total de Produtos</p>
+                <h3 class="mb-0" style="font-family: 'Inter', monospace; font-weight: 700; color: var(--g-on-surface);">{{ total_produtos|default:"0" }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estoque Crítico -->
+    <div class="col-md-3">
+        <div class="gestok-card p-3 d-flex align-items-center gap-3 h-100">
+            <div class="rounded d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background-color: rgba(186,26,26,0.1); color: var(--g-error);">
+                <span class="material-symbols-outlined" style="font-size: 24px;">warning</span>
+            </div>
+            <div>
+                <p class="mb-0" style="font-size: 13px; font-weight: 500; color: var(--g-on-surface-variant);">Estoque Crítico</p>
+                <h3 class="mb-0" style="font-family: 'Inter', monospace; font-weight: 700; color: var(--g-error);">{{ estoque_critico|default:"0" }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vendas Hoje -->
+    <div class="col-md-3">
+        <div class="gestok-card p-3 d-flex align-items-center gap-3 h-100">
+            <div class="rounded d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background-color: rgba(29,91,116,0.1); color: var(--g-primary);">
+                <span class="material-symbols-outlined" style="font-size: 24px;">shopping_cart</span>
+            </div>
+            <div>
+                <p class="mb-0" style="font-size: 13px; font-weight: 500; color: var(--g-on-surface-variant);">Vendas Hoje</p>
+                <h3 class="mb-0" style="font-family: 'Inter', monospace; font-weight: 700; color: var(--g-on-surface);">{{ vendas_hoje|default:"0" }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Faturamento Hoje -->
+    <div class="col-md-3">
+        <div class="gestok-card p-3 d-flex align-items-center gap-3 h-100">
+            <div class="rounded d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background-color: rgba(46,108,0,0.1); color: var(--g-success);">
+                <span class="material-symbols-outlined" style="font-size: 24px;">payments</span>
+            </div>
+            <div>
+                <p class="mb-0" style="font-size: 13px; font-weight: 500; color: var(--g-on-surface-variant);">Faturamento Hoje</p>
+                <h3 class="mb-0" style="font-family: 'Inter', monospace; font-weight: 700; color: var(--g-success);">{{ faturamento_hoje|default:0|currency_brl }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts (7 + 5 columns) -->
+<div class="row g-4 mb-4">
+    <!-- Faturamento Últimos 7 dias -->
+    <div class="col-lg-7">
+        <div class="gestok-card p-4 h-100">
+            <h5 style="font-size: 16px; font-weight: 600; color: var(--g-on-surface);" class="mb-4">Faturamento (Últimos 7 dias)</h5>
+            <div style="position: relative; height: 250px; width: 100%;">
+                <canvas id="faturamentoChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formas de Pagamento -->
+    <div class="col-lg-5">
+        <div class="gestok-card p-4 h-100">
+            <h5 style="font-size: 16px; font-weight: 600; color: var(--g-on-surface);" class="mb-4">Formas de Pagamento</h5>
+            <div style="position: relative; height: 250px; width: 100%; display: flex; justify-content: center;">
+                <canvas id="pagamentoChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- Include Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Faturamento Últimos 7 Dias (Bar Chart)
+    const ctxFaturamento = document.getElementById('faturamentoChart').getContext('2d');
+    new Chart(ctxFaturamento, {
+        type: 'bar',
+        data: {
+            labels: {{ labels_dias|default:"['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']"|safe }},
+            datasets: [{
+                label: 'Faturamento R$',
+                data: {{ dados_faturamento|default:"[1200, 1900, 3000, 2500, 2200, 3100, 2800]"|safe }},
+                backgroundColor: '#1d5b74',
+                borderRadius: 4,
+                barThickness: 24
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(198,198,205,0.3)', drawBorder: false },
+                    ticks: { color: '#45464d', font: { family: "'Inter', sans-serif" } }
+                },
+                x: {
+                    grid: { display: false, drawBorder: false },
+                    ticks: { color: '#45464d', font: { family: "'Inter', sans-serif" } }
+                }
+            }
+        }
+    });
+
+    // Formas de Pagamento (Doughnut Chart)
+    const ctxPagamento = document.getElementById('pagamentoChart').getContext('2d');
+    new Chart(ctxPagamento, {
+        type: 'doughnut',
+        data: {
+            labels: ['PIX', 'Cartão', 'Dinheiro', 'Outros'],
+            datasets: [{
+                data: {{ dados_pagamentos|default:"[45, 30, 20, 5]"|safe }},
+                backgroundColor: [
+                    '#1d5b74', // PIX (primary)
+                    '#2e6c00', // Cartao (success)
+                    '#45464d', // Dinheiro
+                    '#c6c6cd'  // Outros
+                ],
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: '#45464d',
+                        font: { family: "'Inter', sans-serif" },
+                        usePointStyle: true,
+                        padding: 20
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block title %}Caixa | Gestok{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0 text-gray-800"><i class="bi bi-display me-2 text-primary"></i>Tela de Caixa</h1>
+</div>
+
+<div class="row h-100">
+    <!-- Coluna Esquerda: Lista de Vendas Abertas -->
+    <div class="col-lg-5 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white py-3">
+                <h6 class="m-0 font-weight-bold">Vendas Abertas</h6>
+            </div>
+            <div class="card-body p-0 overflow-auto" style="max-height: 70vh;">
+                {% if vendas_abertas %}
+                    <div class="list-group list-group-flush">
+                    {% for venda in vendas_abertas %}
+                        <a href="?venda_id={{ venda.id }}" class="list-group-item list-group-item-action {% if venda_selecionada and venda_selecionada.id == venda.id %}active bg-primary border-primary{% endif %} p-3">
+                            <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                                <h6 class="mb-0 fw-bold">{{ venda.numero_venda }}</h6>
+                                <small class="{% if venda_selecionada and venda_selecionada.id == venda.id %}text-white{% else %}text-muted{% endif %}">
+                                    {{ venda.data_venda|date:"H:i" }}
+                                </small>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="d-block"><i class="bi bi-person me-1"></i>{{ venda.vendedor.nome_completo|default:venda.vendedor.matricula }}</small>
+                                    <small class="d-block"><i class="bi bi-box-seam me-1"></i>{{ venda.itens.count }} itens</small>
+                                </div>
+                                <div class="fs-5 fw-bold">
+                                    R$ {{ venda.valor_total|floatformat:2 }}
+                                </div>
+                            </div>
+                        </a>
+                    {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center p-5 text-muted">
+                        <i class="bi bi-emoji-smile fs-1 d-block mb-3"></i>
+                        <p>Nenhuma venda aberta no momento.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Coluna Direita: Detalhes da Venda Selecionada -->
+    <div class="col-lg-7 mb-4">
+        <div class="card shadow-sm h-100">
+            {% if venda_selecionada %}
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Detalhes — {{ venda_selecionada.numero_venda }}</h6>
+                    <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>ABERTA</span>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-sm-6">
+                            <p class="text-muted mb-1 small">Vendedor</p>
+                            <h6 class="fw-bold">{{ venda_selecionada.vendedor.nome_completo|default:venda_selecionada.vendedor.matricula }}</h6>
+                        </div>
+                        <div class="col-sm-6 text-sm-end">
+                            <p class="text-muted mb-1 small">Data de Abertura</p>
+                            <h6 class="fw-bold">{{ venda_selecionada.data_venda|date:"d/m/Y H:i" }}</h6>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive mb-4">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Produto</th>
+                                    <th class="text-center">Qtd</th>
+                                    <th class="text-end">Preço Unit.</th>
+                                    <th class="text-end">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in venda_selecionada.itens.all %}
+                                <tr>
+                                    <td>
+                                        {{ item.produto.nome }}
+                                        <br><small class="text-muted">{{ item.produto.codigo_produto }}</small>
+                                    </td>
+                                    <td class="text-center">{{ item.quantidade }}</td>
+                                    <td class="text-end">R$ {{ item.preco_unitario|floatformat:2 }}</td>
+                                    <td class="text-end fw-semibold">R$ {{ item.subtotal|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-light fw-bold fs-5">
+                                <tr>
+                                    <td colspan="3" class="text-end">Total:</td>
+                                    <td class="text-end text-primary">R$ {{ venda_selecionada.valor_total|floatformat:2 }}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <form method="post" action="{% url 'cashier:sale_close' venda_selecionada.id %}">
+                        {% csrf_token %}
+                        <h6 class="mb-3 font-weight-bold">Forma de pagamento:</h6>
+                        <div class="d-flex gap-3 mb-4">
+                            <input type="radio" class="btn-check" name="forma_pagamento" id="pagamento_dinheiro" value="DINHEIRO" required>
+                            <label class="btn btn-outline-success flex-fill p-3 d-flex flex-column align-items-center" for="pagamento_dinheiro">
+                                <i class="bi bi-cash fs-3 mb-2"></i> Dinheiro
+                            </label>
+
+                            <input type="radio" class="btn-check" name="forma_pagamento" id="pagamento_pix" value="PIX" required>
+                            <label class="btn btn-outline-info flex-fill p-3 d-flex flex-column align-items-center" for="pagamento_pix">
+                                <i class="bi bi-qr-code fs-3 mb-2"></i> Pix
+                            </label>
+
+                            <input type="radio" class="btn-check" name="forma_pagamento" id="pagamento_cartao" value="CARTAO" required>
+                            <label class="btn btn-outline-warning flex-fill p-3 d-flex flex-column align-items-center" for="pagamento_cartao">
+                                <i class="bi bi-credit-card fs-3 mb-2"></i> Cartão
+                            </label>
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg py-3 fw-bold shadow-sm" data-confirm="Confirma a finalização desta venda?">
+                                <i class="bi bi-check-circle me-2"></i> Finalizar Venda
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            {% else %}
+                <div class="card-body d-flex flex-column justify-content-center align-items-center text-center h-100 text-muted p-5">
+                    <i class="bi bi-receipt fs-1 mb-3 text-light-gray" style="font-size: 4rem;"></i>
+                    <h4>Selecione uma venda</h4>
+                    <p>Clique em uma das vendas abertas na lista ao lado para visualizar seus detalhes e realizar a finalização.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

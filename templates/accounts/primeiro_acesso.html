@@ -1,0 +1,69 @@
+{% extends 'base_auth.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Definir Senha{% endblock %}
+
+{% block auth_content %}
+<div class="mb-4 text-center">
+  <h5 class="fw-semibold">Bem-vindo(a), {{ request.user.nome_completo }}!</h5>
+  <p class="text-muted small">Este é o seu primeiro acesso. Por favor, defina uma nova senha pessoal para continuar.</p>
+</div>
+
+<form method="post" novalidate>
+  {% csrf_token %}
+
+  <div class="mb-3">
+    <label for="id_new_password" class="form-label">
+      Nova Senha <span class="required-asterisk">*</span>
+    </label>
+    <div class="input-group">
+      <span class="input-group-text bg-white border-end-0 text-muted">
+        <i class="bi bi-lock"></i>
+      </span>
+      {% render_field form.new_password class+="form-control border-start-0 border-end-0 ps-0" %}
+      <button class="btn btn-outline-secondary bg-white border-start-0 toggle-password" type="button" data-target="id_new_password" aria-label="Mostrar senha">
+        <i class="bi bi-eye"></i>
+      </button>
+    </div>
+    {% if form.new_password.errors %}
+      {% for error in form.new_password.errors %}
+        <div class="text-danger fs-7 mt-1">{{ error }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <!-- Password Strength Meter -->
+    <div class="mt-2">
+      <div class="strength-meter mb-1">
+        <div id="password-strength-bar" class="strength-meter-bar"></div>
+      </div>
+      <small id="password-strength-text" class="fs-7"></small>
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <label for="id_confirm_password" class="form-label">
+      Confirmar Senha <span class="required-asterisk">*</span>
+    </label>
+    <div class="input-group">
+      <span class="input-group-text bg-white border-end-0 text-muted">
+        <i class="bi bi-lock-fill"></i>
+      </span>
+      {% render_field form.confirm_password class+="form-control border-start-0 border-end-0 ps-0" id="id_confirm_password" %}
+      <button class="btn btn-outline-secondary bg-white border-start-0 toggle-password" type="button" data-target="id_confirm_password" aria-label="Mostrar senha">
+        <i class="bi bi-eye"></i>
+      </button>
+    </div>
+    {% if form.confirm_password.errors %}
+      {% for error in form.confirm_password.errors %}
+        <div class="text-danger fs-7 mt-1">{{ error }}</div>
+      {% endfor %}
+    {% endif %}
+  </div>
+
+  <div class="d-grid">
+    <button type="submit" class="btn btn-primary py-2 fw-semibold">
+      Definir senha e entrar <i class="bi bi-shield-check ms-1"></i>
+    </button>
+  </div>
+</form>
+{% endblock %}

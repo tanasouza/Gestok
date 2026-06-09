@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhes do Usuário{% endblock %}
+
+{% block content %}
+<div class="page-heading mb-4">
+    <h1 class="page-header-title mb-0">Detalhes do Usuário</h1>
+    <p class="page-header-subtitle">Informações de cadastro e acesso de {{ selected_user.nome_completo }}.</p>
+</div>
+
+<div class="gestok-card p-4">
+    <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <h2 class="h5 mb-1">{{ selected_user.nome_completo }}</h2>
+            <span style="color: var(--g-on-surface-variant);">Matrícula #{{ selected_user.matricula }}</span>
+        </div>
+        <a href="{% url 'accounts:user_edit' selected_user.pk %}" class="btn btn-primary">Editar Usuário</a>
+    </div>
+    <p><strong>E-mail:</strong> {{ selected_user.email|default:"-" }}</p>
+    <p><strong>Telefone:</strong> {{ selected_user.telefone|default:"-" }}</p>
+    <p><strong>Endereço:</strong> {{ selected_user.endereco_formatado|default:"-" }}</p>
+    <p><strong>Cargo operacional:</strong> {{ selected_user.get_cargo_display }}</p>
+    <a href="{% url 'accounts:user_list' %}" class="btn btn-light">Voltar</a>
+</div>
+{% endblock %}
