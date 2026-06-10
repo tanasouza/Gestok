@@ -14,6 +14,7 @@ class Sale(models.Model):
         ('DINHEIRO', 'Dinheiro'),
         ('PIX', 'Pix'),
         ('CARTAO', 'Cartão'),
+        ('OUTROS', 'Outros'),
     )
 
     numero_venda = models.CharField(

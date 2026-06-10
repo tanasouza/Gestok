@@ -1,6 +1,6 @@
 import csv
 import json
-from datetime import timedelta
+from datetime import date, timedelta
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
@@ -12,12 +12,36 @@ from django.views.generic import TemplateView, View
 
 from accounts.mixins import AdminRequiredMixin, CaixaOrAdminRequiredMixin
 from cashier.models import CashRegister
-from core.date_filters import filter_by_local_date_range, parse_filter_date
+from core.date_filters import (
+    filter_by_local_date_range,
+    local_day_bounds,
+    parse_filter_date,
+)
 from core.pdf_reports import build_cash_closing_pdf
 from products.models import Category, Product
 from sales.models import Sale, SaleItem
 
 User = get_user_model()
+
+
+def finalized_sales_between(start_date, end_date):
+    start, _ = local_day_bounds(start_date)
+    _, end = local_day_bounds(end_date)
+    return Sale.objects.filter(status='FINALIZADA').filter(
+        Q(data_finalizacao__gte=start, data_finalizacao__lt=end)
+        | Q(
+            data_finalizacao__isnull=True,
+            data_venda__gte=start,
+            data_venda__lt=end,
+        )
+    )
+
+
+def month_bounds(year, month):
+    start = date(year, month, 1)
+    if month == 12:
+        return start, date(year + 1, 1, 1) - timedelta(days=1)
+    return start, date(year, month + 1, 1) - timedelta(days=1)
 
 
 class DashboardView(AdminRequiredMixin, TemplateView):
@@ -29,12 +53,11 @@ class DashboardView(AdminRequiredMixin, TemplateView):
         today = timezone.localtime(timezone.now()).date()
 
         active_products = Product.objects.filter(ativo=True).select_related('categoria')
-        vendas_hoje = Sale.objects.filter(data_venda__date=today, status='FINALIZADA')
-        vendas_mes = Sale.objects.filter(status='FINALIZADA', data_venda__year=today.year, data_venda__month=today.month)
+        month_start, month_end = month_bounds(today.year, today.month)
+        vendas_hoje = finalized_sales_between(today, today)
+        vendas_mes = finalized_sales_between(month_start, month_end)
         itens_mes = SaleItem.objects.filter(
-            venda__status='FINALIZADA',
-            venda__data_venda__year=today.year,
-            venda__data_venda__month=today.month,
+            venda__in=vendas_mes,
         ).select_related('produto', 'produto__categoria')
 
         context['total_produtos'] = active_products.count()
@@ -56,8 +79,10 @@ class DashboardView(AdminRequiredMixin, TemplateView):
 
         pay_totals = vendas_mes.values('forma_pagamento').annotate(total=Sum('valor_total'))
         pay_dict = {item['forma_pagamento']: float(item['total'] or 0) for item in pay_totals}
-        pay_keys = ['PIX', 'CARTAO', 'DINHEIRO']
-        context['chart_pagamentos_labels'] = json.dumps(['Pix', 'Cartão', 'Dinheiro'])
+        pay_keys = ['PIX', 'CARTAO', 'DINHEIRO', 'OUTROS']
+        context['chart_pagamentos_labels'] = json.dumps(
+            ['Pix', 'Cartão', 'Dinheiro', 'Outros']
+        )
         context['chart_pagamentos_data'] = json.dumps([pay_dict.get(key, 0.0) for key in pay_keys])
 
         top_produtos = itens_mes.values('produto__nome').annotate(qtd=Sum('quantidade')).order_by('-qtd')[:5]
@@ -69,7 +94,9 @@ class DashboardView(AdminRequiredMixin, TemplateView):
         for i in range(6, -1, -1):
             dia = today - timedelta(days=i)
             dias_labels.append(dia.strftime('%d/%m'))
-            total_dia = Sale.objects.filter(status='FINALIZADA', data_venda__date=dia).aggregate(total=Sum('valor_total'))['total'] or Decimal('0.00')
+            total_dia = finalized_sales_between(dia, dia).aggregate(
+                total=Sum('valor_total')
+            )['total'] or Decimal('0.00')
             dias_data.append(float(total_dia))
         context['chart_7d_labels'] = json.dumps(dias_labels)
         context['chart_7d_data'] = json.dumps(dias_data)
@@ -108,7 +135,11 @@ class DashboardView(AdminRequiredMixin, TemplateView):
         ano = int(self.request.GET.get('ano', today.year))
         valores_ano = []
         for mes in range(1, 13):
-            total_mes = Sale.objects.filter(status='FINALIZADA', data_venda__year=ano, data_venda__month=mes).aggregate(total=Sum('valor_total'))['total'] or Decimal('0.00')
+            selected_start, selected_end = month_bounds(ano, mes)
+            total_mes = finalized_sales_between(
+                selected_start,
+                selected_end,
+            ).aggregate(total=Sum('valor_total'))['total'] or Decimal('0.00')
             valores_ano.append(float(total_mes))
         context['ano_selecionado'] = ano
         context['anos_disponiveis'] = range(today.year - 5, today.year + 1)
